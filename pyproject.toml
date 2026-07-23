@@ -43,6 +43,11 @@ dev = [
     "torch>=2.0.0"
 ]
 
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:Failed to initialize NumPy:UserWarning"
+]
+
 [project.urls]
 Homepage = "https://github.com/anthonyjclark/pymatch"
 Repository = "https://github.com/anthonyjclark/pymatch"
