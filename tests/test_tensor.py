@@ -28,6 +28,20 @@ class TestTensor(unittest.TestCase):
         self.assertAlmostEqual(match_x.grad.item(), torch_x.grad.item())
         self.assertAlmostEqual(match_y.grad.item(), torch_y.grad.item())
 
+    def test_pow(self):
+        match_x = match.Tensor([2.0, 3.0, 4.0], requires_grad=True)
+        match_y = match_x**3.0
+        match_loss = match_y.sum()
+        match_loss.backward()
+
+        torch_x = torch.tensor([2.0, 3.0, 4.0], requires_grad=True)
+        torch_y = torch_x**3.0
+        torch_loss = torch_y.sum()
+        torch_loss.backward()
+
+        self.assertEqual(match_y.data.tolist(), torch_y.detach().tolist())
+        self.assertEqual(match_x.grad.tolist(), torch_x.grad.tolist())
+
     def test_matmul_gradient(self):
         match_A = match.Tensor([[1.0, 2.0], [3.0, 4.0]], requires_grad=True)
         match_B = match.Tensor([[5.0, 6.0], [7.0, 8.0]], requires_grad=True)
@@ -35,7 +49,6 @@ class TestTensor(unittest.TestCase):
         loss = match_C.sum()
         loss.backward()
 
-        # PyTorch
         torch_A = torch.tensor([[1.0, 2.0], [3.0, 4.0]], requires_grad=True)
         torch_B = torch.tensor([[5.0, 6.0], [7.0, 8.0]], requires_grad=True)
         torch_C = torch_A @ torch_B
@@ -47,12 +60,10 @@ class TestTensor(unittest.TestCase):
         self.assertEqual(match_B.grad.tolist(), torch_B.grad.tolist())
 
     def test_activations(self):
-        # PyMatch
         match_x = match.Tensor([-2.0, 0.0, 3.0], requires_grad=True)
         match_y = match_x.relu()
         match_y.sum().backward()
 
-        # PyTorch
         torch_x = torch.tensor([-2.0, 0.0, 3.0], requires_grad=True)
         torch_y = torch.relu(torch_x)
         torch_y.sum().backward()

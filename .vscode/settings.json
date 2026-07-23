@@ -1,0 +1,11 @@
+{
+    "cSpell.words": [
+        "autograd",
+        "filterwarnings",
+        "keepdims",
+        "pytest",
+        "randn",
+        "setuptools",
+        "unbroadcast"
+    ]
+}

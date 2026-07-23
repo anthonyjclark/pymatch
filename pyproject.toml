@@ -58,3 +58,6 @@ include = ["match*", "tests*"]
 
 [tool.setuptools.package-data]
 match = ["*.c", "*.cu"]
+
+[tool.ruff]
+line-length = 100
