@@ -1,45 +1,76 @@
-import math
+from __future__ import annotations
+
+from collections.abc import Callable, Sequence
+from math import exp, prod, tanh
+
+type Item = int | float
+type NestedSequence[T] = T | Sequence[NestedSequence[T]]
+type NestedItems = Item | Sequence[NestedItems[Item]]
+type NestedInts = int | Sequence[NestedInts[int]]
+type Shape = tuple[int, ...]
+type Index = NestedInts | NDArray
+type BinaryOp[T] = Callable[[T, T], T]
 
 
 class NDArray:
-    def __init__(self, data, shape=None):
+    def __init__(
+        self, data: NestedItems | NDArray, shape: int | Shape | None = None, dtype: type[Item] = float
+    ) -> None:
         """
         Initialize an NDArray.
 
         Args:
             data: The data to initialize the array with (NDArray, scalar, list, or tuple).
             shape: The shape of the array. If None, inferred from data.
+            dtype: The data type of the array elements.
         """
-        if isinstance(data, NDArray):
-            self.data = list(data.data)
-            self.shape = data.shape if shape is None else tuple(shape)
-        elif isinstance(data, (int, float)):
+        self.data: list[Item]
+        self.shape: Shape
+        self.strides: Shape
+        self.dtype: type[Item] = dtype
+
+        # TODO: enforce dtype on data
+
+        if isinstance(shape, int):
+            shape = (shape,)
+        if shape is not None:
+            shape = tuple(shape if isinstance(shape, (list, tuple)) else (shape,))
+
+        if isinstance(data, float):
             self.data = [float(data)]
-            self.shape = () if shape is None else tuple(shape)
+            self.shape = () if shape is None else shape
+
         elif isinstance(data, (list, tuple)):
             flat_data, detected_shape = self._flatten(data)
             self.data = [float(x) for x in flat_data]
             self.shape = tuple(shape) if shape is not None else detected_shape
+
+        elif isinstance(data, NDArray):
+            self.data = list(data.data)
+            self.shape = data.shape if shape is None else shape
+
         else:
-            if hasattr(data, "tolist"):
-                data = data.tolist()
-                flat_data, detected_shape = self._flatten(data)
-                self.data = [float(x) for x in flat_data]
-                self.shape = tuple(shape) if shape is not None else detected_shape
-            else:
-                raise TypeError(f"Unsupported data type for NDArray: {type(data)}")
+            raise TypeError(f"Unsupported data type for NDArray: {type(data)}")
+
+        n = len(self.data)
+        shape_n = prod(self.shape)
+        if (not self.shape and n != 1) or (shape_n != n):
+            raise ValueError(f"Data size {n} does not match size {shape_n} for shape {self.shape}")
 
         self.strides = self._calc_strides(self.shape)
 
     @staticmethod
-    def _flatten(seq):
-        if not isinstance(seq, (list, tuple)):
+    def _flatten(seq: NestedItems) -> tuple[list[Item], Shape]:
+        if isinstance(seq, (int, float)):
             return [seq], ()
-        if len(seq) == 0:
+
+        if isinstance(seq, (list, tuple)) and len(seq) == 0:
             return [], (0,)
 
-        flat = []
-        elem_shapes = []
+        flat: list[Item] = []
+        elem_shapes: list[Shape] = []
+
+        assert isinstance(seq, (list, tuple))
         for item in seq:
             sub_flat, sub_shape = NDArray._flatten(item)
             flat.extend(sub_flat)
@@ -53,85 +84,89 @@ class NDArray:
 
         return flat, (dim0,) + sub_shape
 
+    """
+    And unflatten
+    """
+
     @staticmethod
-    def _calc_strides(shape):
+    def _calc_strides(shape: Shape) -> Shape:
         if not shape:
             return ()
+
         strides = [1] * len(shape)
+
         for i in range(len(shape) - 2, -1, -1):
             strides[i] = strides[i + 1] * shape[i + 1]
+
         return tuple(strides)
 
     @property
-    def ndim(self):
+    def ndim(self) -> int:
         return len(self.shape)
 
     @property
-    def size(self):
-        if not self.shape:
-            return 1
-        res = 1
-        for d in self.shape:
-            res *= d
-        return res
+    def size(self) -> int:
+        return len(self.data)
 
-    def copy(self):
-        return NDArray(list(self.data), shape=self.shape)
+    def copy(self) -> NDArray:
+        return NDArray(self)
 
-    def fill(self, val):
-        val = float(val)
+    def fill(self, val: float | int) -> None:
+        val_float = float(val)
         for i in range(len(self.data)):
-            self.data[i] = val
+            self.data[i] = val_float
 
-    def item(self):
+    def item(self) -> float:
+        if self.size != 1:
+            raise ValueError("can only convert an array of size 1 to a Python scalar")
+        return float(self.data[0])
+
+    def tolist(self) -> NestedItems:
         if self.size == 1:
-            return float(self.data[0])
-        raise ValueError("can only convert an array of size 1 to a Python scalar")
+            return list(self.data)
 
-    def tolist(self):
-        if self.ndim == 0:
-            return self.data[0]
-
-        def _unflatten(data, shape):
+        def _unflatten(data: list[Item], shape: Shape) -> NestedItems:
             if len(shape) == 1:
-                return data[: shape[0]]
+                return list(data)
+
             step = 1
             for d in shape[1:]:
                 step *= d
+
             return [_unflatten(data[i * step : (i + 1) * step], shape[1:]) for i in range(shape[0])]
 
         return _unflatten(self.data, self.shape)
 
-    def reshape(self, *new_shape):
-        if len(new_shape) == 1 and isinstance(new_shape[0], (list, tuple)):
-            new_shape = tuple(new_shape[0])
-        else:
-            new_shape = tuple(new_shape)
+    def reshape(self, *shape: int | Shape) -> NDArray:
+        if len(shape) == 1 and isinstance(shape[0], tuple):
+            shape = shape[0]
 
-        if -1 in new_shape:
-            neg_idx = new_shape.index(-1)
+        if -1 in shape:
+            neg_idx = shape.index(-1)
             known_prod = 1
-            for i, d in enumerate(new_shape):
+            for i, d in enumerate(shape):
                 if i != neg_idx:
-                    known_prod *= d
-            calc_dim = self.size // known_prod
-            new_shape = new_shape[:neg_idx] + (calc_dim,) + new_shape[neg_idx + 1 :]
+                    known_prod *= d  # type: ignore
+            calc_dim = self.size // known_prod  # type: ignore
+            shape = shape[:neg_idx] + (calc_dim,) + shape[neg_idx + 1 :]
 
         new_size = 1
-        for d in new_shape:
-            new_size *= d
-        if new_size != self.size:
-            raise ValueError(f"Cannot reshape array of size {self.size} into shape {new_shape}")
+        for d in shape:
+            new_size *= d  # type: ignore
 
-        return NDArray(list(self.data), shape=new_shape)
+        if new_size != self.size:
+            raise ValueError(f"Cannot reshape array of size {self.size} into shape {shape}")
+
+        return NDArray(list(self.data), shape=shape)  # type: ignore
 
     @property
-    def T(self):
+    def T(self) -> NDArray:
         return self.transpose()
 
-    def transpose(self):
+    def transpose(self) -> NDArray:
         if self.ndim < 2:
             return self.copy()
+
         if self.ndim == 2:
             rows, cols = self.shape
             out_data = [0.0] * (rows * cols)
@@ -147,35 +182,40 @@ class NDArray:
             rev_coords = tuple(reversed(coords))
             new_idx = self._ravel_index(rev_coords, new_shape)
             out_data[new_idx] = self.data[i]
+
         return NDArray(out_data, shape=new_shape)
 
-    def _unravel_index(self, index, shape):
+    def _unravel_index(self, index: int, shape: Shape) -> Shape:
         if not shape:
             return ()
-        coords = []
+
+        coords: list[int] = []
         for d in reversed(shape):
             coords.append(index % d if d != 0 else 0)
             index //= d if d != 0 else 1
+
         return tuple(reversed(coords))
 
-    def _ravel_index(self, coords, shape):
+    def _ravel_index(self, coords: Shape, shape: Shape) -> int:
         if not shape:
             return 0
+
         idx = 0
         stride = 1
         for c, d in zip(reversed(coords), reversed(shape)):
             idx += c * stride
             stride *= d
+
         return idx
 
     @staticmethod
-    def _broadcast_shapes(s1, s2):
+    def _broadcast_shapes(s1: Shape, s2: Shape) -> tuple[Shape, Shape, Shape]:
         l1, l2 = len(s1), len(s2)
         max_len = max(l1, l2)
         s1_pad = (1,) * (max_len - l1) + s1
         s2_pad = (1,) * (max_len - l2) + s2
 
-        out_shape = []
+        out_shape: list[int] = []
         for d1, d2 in zip(s1_pad, s2_pad):
             if d1 == 1:
                 out_shape.append(d2)
@@ -185,9 +225,10 @@ class NDArray:
                 out_shape.append(d1)
             else:
                 raise ValueError(f"Operands could not be broadcast together with shapes {s1} {s2}")
+
         return tuple(out_shape), s1_pad, s2_pad
 
-    def _binary_op(self, other, op_fn):
+    def _binary_op(self, other: float | NDArray, op_fn: BinaryOp[float]) -> NDArray:
         if not isinstance(other, NDArray):
             other = NDArray(other)
 
@@ -208,59 +249,63 @@ class NDArray:
 
         return NDArray(out_data, shape=out_shape)
 
-    def __add__(self, other):
+    # TODO: consider using a switch above, or importing operators instead of using lambdas
+
+    def __add__(self, other: float | NDArray) -> NDArray:
         return self._binary_op(other, lambda a, b: a + b)
 
-    def __radd__(self, other):
+    def __radd__(self, other: float | NDArray) -> NDArray:
         return NDArray(other).__add__(self)
 
-    def __sub__(self, other):
+    def __sub__(self, other: float | NDArray) -> NDArray:
         return self._binary_op(other, lambda a, b: a - b)
 
-    def __rsub__(self, other):
+    def __rsub__(self, other: float | NDArray) -> NDArray:
         return NDArray(other).__sub__(self)
 
-    def __mul__(self, other):
+    def __mul__(self, other: float | NDArray) -> NDArray:
         return self._binary_op(other, lambda a, b: a * b)
 
-    def __rmul__(self, other):
+    def __rmul__(self, other: float | NDArray) -> NDArray:
         return self._binary_op(other, lambda a, b: a * b)
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: float | NDArray) -> NDArray:
         return self._binary_op(other, lambda a, b: a / b)
 
-    def __rtruediv__(self, other):
+    def __rtruediv__(self, other: float | NDArray) -> NDArray:
         return NDArray(other).__truediv__(self)
 
-    def __pow__(self, other):
+    def __pow__(self, other: float | NDArray) -> NDArray:
         return self._binary_op(other, lambda a, b: a**b)
 
-    def __rpow__(self, other):
+    def __rpow__(self, other: float | NDArray) -> NDArray:
         return NDArray(other).__pow__(self)
 
-    def __neg__(self):
+    def __neg__(self) -> NDArray:
         return NDArray([-x for x in self.data], shape=self.shape)
 
-    def __gt__(self, other):
+    def __gt__(self, other: float | NDArray) -> NDArray:
         return self._binary_op(other, lambda a, b: 1.0 if a > b else 0.0)
 
-    def __lt__(self, other):
+    def __lt__(self, other: float | NDArray) -> NDArray:
         return self._binary_op(other, lambda a, b: 1.0 if a < b else 0.0)
 
-    def __ge__(self, other):
+    def __ge__(self, other: float | NDArray) -> NDArray:
         return self._binary_op(other, lambda a, b: 1.0 if a >= b else 0.0)
 
-    def __le__(self, other):
+    def __le__(self, other: float | NDArray) -> NDArray:
         return self._binary_op(other, lambda a, b: 1.0 if a <= b else 0.0)
 
-    def __eq__(self, other):
+    def __eq__(self, other: float | NDArray) -> NDArray:  # type: ignore
         return self._binary_op(other, lambda a, b: 1.0 if a == b else 0.0)
 
-    def __matmul__(self, other):
+    def __matmul__(self, other: float | NDArray) -> NDArray:
         if not isinstance(other, NDArray):
             other = NDArray(other)
+
         if self.ndim != 2 or other.ndim != 2:
             raise ValueError(f"Matmul requires 2D arrays, got ndim {self.ndim} and {other.ndim}")
+
         M, K = self.shape
         K_b, N = other.shape
         if K != K_b:
@@ -279,36 +324,35 @@ class NDArray:
                 c_data[out_off + j] = s
         return NDArray(c_data, shape=(M, N))
 
-    def relu(self):
+    def relu(self) -> NDArray:
         return NDArray([x if x > 0.0 else 0.0 for x in self.data], shape=self.shape)
 
-    def sigmoid(self):
-        return NDArray(
-            [1.0 / (1.0 + math.exp(-max(-50.0, min(50.0, x)))) for x in self.data], shape=self.shape
-        )
+    def sigmoid(self) -> NDArray:
+        return NDArray([1.0 / (1.0 + exp(-max(-50.0, min(50.0, x)))) for x in self.data], shape=self.shape)
 
-    def tanh(self):
-        return NDArray([math.tanh(x) for x in self.data], shape=self.shape)
+    def tanh(self) -> NDArray:
+        return NDArray([tanh(x) for x in self.data], shape=self.shape)
 
-    def sum(self, axis=None, keepdims=False):
+    def sum(self, axis: int | Shape | None = None, keepdims: bool = False) -> NDArray:
         if axis is None:
             total = sum(self.data)
             return NDArray([total], shape=() if not keepdims else (1,) * self.ndim)
 
         if isinstance(axis, int):
             axis = (axis,)
-        axis = tuple(a % self.ndim for a in axis)
 
-        out_shape = []
+        axis_normalized = tuple(a % self.ndim for a in axis)
+
+        out_shape: list[int] = []
         for i, d in enumerate(self.shape):
-            if i in axis:
+            if i in axis_normalized:
                 if keepdims:
                     out_shape.append(1)
             else:
                 out_shape.append(d)
-        out_shape = tuple(out_shape)
+        final_out_shape = tuple(out_shape)
         out_size = 1
-        for d in out_shape:
+        for d in final_out_shape:
             out_size *= d
         if out_size == 0:
             out_size = 1
@@ -317,67 +361,75 @@ class NDArray:
 
         for i in range(self.size):
             coords = self._unravel_index(i, self.shape)
-            out_coords = []
+            out_coords: list[int] = []
             for ax, c in enumerate(coords):
-                if ax not in axis:
+                if ax not in axis_normalized:
                     out_coords.append(c)
                 elif keepdims:
                     out_coords.append(0)
-            out_coords = tuple(out_coords)
-            out_idx = self._ravel_index(out_coords, out_shape) if out_coords else 0
+            final_out_coords = tuple(out_coords)
+            out_idx = self._ravel_index(final_out_coords, final_out_shape) if final_out_coords else 0
             out_data[out_idx] += self.data[i]
 
-        return NDArray(out_data, shape=out_shape)
+        return NDArray(out_data, shape=final_out_shape)
 
-    def mean(self, axis=None, keepdims=False):
+    def mean(self, axis: int | Shape | None = None, keepdims: bool = False) -> NDArray:
         s = self.sum(axis=axis, keepdims=keepdims)
         num_elem = self.size if axis is None else 1
         if axis is not None:
-            if isinstance(axis, int):
-                axis = (axis,)
+            axis = (axis,) if isinstance(axis, int) else axis
             for a in axis:
                 num_elem *= self.shape[a % self.ndim]
         return s / float(num_elem)
 
-    def __getitem__(self, idx):
-        if isinstance(idx, NDArray):
+    def __getitem__(self, idx: Index) -> float | NDArray:
+        # TODO: need an int NDArray for indexing
+        if isinstance(idx, int):
+            idx = (idx,)
+
+        elif isinstance(idx, Sequence):
+            idx = idx
+
+        elif isinstance(idx, NDArray):
+            assert idx.dtype == int, "Indexing NDArray must be of integer type"
             flat_mask = idx.data
             out_data = [self.data[i] for i, m in enumerate(flat_mask) if m != 0.0]
             return NDArray(out_data, shape=(len(out_data),))
 
-        if isinstance(idx, int):
-            idx = (idx,)
+        if len(idx) == 1 and isinstance(idx[0], int) and self.ndim == 1:
+            return self.data[idx[0]]
 
-        if isinstance(idx, tuple):
-            if len(idx) == 1 and isinstance(idx[0], int) and self.ndim == 1:
-                return self.data[idx[0]]
-            if len(idx) == 2 and all(isinstance(x, int) for x in idx) and self.ndim == 2:
-                r, c = idx
-                return self.data[r * self.shape[1] + c]
-            if len(idx) == 1 and isinstance(idx[0], int) and self.ndim == 2:
-                r = idx[0]
-                row_data = self.data[r * self.shape[1] : (r + 1) * self.shape[1]]
-                return NDArray(row_data, shape=(self.shape[1],))
+        elif len(idx) == 2 and isinstance(idx[0], int) and isinstance(idx[1], int) and self.ndim == 2:
+            r: int = idx[0]
+            c: int = idx[1]
+            return self.data[r * self.shape[1] + c]
 
+        elif len(idx) == 1 and isinstance(idx[0], int) and self.ndim == 2:
+            r = idx[0]
+            row_data = self.data[r * self.shape[1] : (r + 1) * self.shape[1]]
+            return NDArray(row_data, shape=(self.shape[1],))
+
+        # TODO: replace, this case is too inefficient
         res = self.tolist()
-        if isinstance(idx, tuple):
-            for i in idx:
-                res = res[i]
-        else:
-            res = res[idx]
+
+        for i in idx:
+            res = res[i]  # type: ignore
+
         return NDArray(res)
 
-    def __setitem__(self, idx, value):
+    # TODO: support nested items for values?
+    def __setitem__(self, idx: Index, value: NDArray) -> None:
         val_float = float(value) if isinstance(value, (int, float)) else float(value.data[0])
         if isinstance(idx, tuple) and len(idx) == 2 and self.ndim == 2:
-            r, c = idx
+            r: int = idx[0]  # type: ignore
+            c: int = idx[1]  # type: ignore
             self.data[r * self.shape[1] + c] = val_float
         elif isinstance(idx, int) and self.ndim == 1:
             self.data[idx] = val_float
         else:
             raise NotImplementedError("Setitem currently supported for 1D/2D indices")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if self.ndim == 0:
             return f"{self.data[0]:.4f}"
         return f"{self.tolist()}"

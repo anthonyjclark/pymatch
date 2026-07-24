@@ -6,6 +6,7 @@
         "pytest",
         "randn",
         "setuptools",
-        "unbroadcast"
+        "unbroadcast",
+        "unflatten"
     ]
 }
