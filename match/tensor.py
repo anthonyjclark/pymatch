@@ -5,9 +5,6 @@ from collections.abc import Callable
 
 from ._ndarray import NDArray, NestedArray, Scalar, Shape, _shape_cast, _shape_to_size
 
-# TODO: maybe remove this?
-type OperandInput = Scalar | Tensor
-
 
 def manual_seed(seed: int) -> None:
     random.seed(seed)
@@ -146,7 +143,7 @@ class Tensor:
         for node in reversed(compute_graph):
             node._backward()
 
-    def __add__(self, other: OperandInput) -> Tensor:
+    def __add__(self, other: Tensor | Scalar) -> Tensor:
         other_tensor = other if isinstance(other, Tensor) else Tensor._create(other)
         out_data = self.data + other_tensor.data
         out = Tensor._create(out_data, requires_grad=self.requires_grad or other_tensor.requires_grad)
@@ -164,10 +161,10 @@ class Tensor:
         out._backward = _backward
         return out
 
-    def __radd__(self, other: OperandInput) -> Tensor:
+    def __radd__(self, other: Tensor | Scalar) -> Tensor:
         return Tensor._create(other).__add__(self)
 
-    def __sub__(self, other: OperandInput) -> Tensor:
+    def __sub__(self, other: Tensor | Scalar) -> Tensor:
         other_tensor = other if isinstance(other, Tensor) else Tensor._create(other)
         out_data = self.data - other_tensor.data
         out = Tensor._create(out_data, requires_grad=self.requires_grad or other_tensor.requires_grad)
@@ -185,10 +182,10 @@ class Tensor:
         out._backward = _backward
         return out
 
-    def __rsub__(self, other: OperandInput) -> Tensor:
+    def __rsub__(self, other: Tensor | Scalar) -> Tensor:
         return Tensor._create(other).__sub__(self)
 
-    def __mul__(self, other: OperandInput) -> Tensor:
+    def __mul__(self, other: Tensor | Scalar) -> Tensor:
         other_tensor = other if isinstance(other, Tensor) else Tensor._create(other)
         out_data = self.data * other_tensor.data
         out = Tensor._create(out_data, requires_grad=self.requires_grad or other_tensor.requires_grad)
@@ -206,10 +203,10 @@ class Tensor:
         out._backward = _backward
         return out
 
-    def __rmul__(self, other: OperandInput) -> Tensor:
+    def __rmul__(self, other: Tensor | Scalar) -> Tensor:
         return Tensor._create(other).__mul__(self)
 
-    def __truediv__(self, other: OperandInput) -> Tensor:
+    def __truediv__(self, other: Tensor | Scalar) -> Tensor:
         other_tensor = other if isinstance(other, Tensor) else Tensor._create(other)
         out_data = self.data / other_tensor.data
         out = Tensor._create(out_data, requires_grad=self.requires_grad or other_tensor.requires_grad)
@@ -227,10 +224,10 @@ class Tensor:
         out._backward = _backward
         return out
 
-    def __rtruediv__(self, other: OperandInput) -> Tensor:
+    def __rtruediv__(self, other: Tensor | Scalar) -> Tensor:
         return Tensor._create(other).__truediv__(self)
 
-    def __pow__(self, other: OperandInput) -> Tensor:
+    def __pow__(self, other: Tensor | Scalar) -> Tensor:
         p = other.data.data if isinstance(other, Tensor) else other
         out_data = self.data**p  # type: ignore
         out = Tensor._create(out_data, requires_grad=self.requires_grad)
@@ -245,13 +242,13 @@ class Tensor:
         out._backward = _backward
         return out
 
-    def __rpow__(self, other: OperandInput) -> Tensor:
+    def __rpow__(self, other: Tensor | Scalar) -> Tensor:
         return Tensor._create(other).__pow__(self)
 
     def __neg__(self) -> Tensor:
         return self * (-1.0)
 
-    def __matmul__(self, other: OperandInput) -> Tensor:
+    def __matmul__(self, other: Tensor | Scalar) -> Tensor:
         other_tensor = other if isinstance(other, Tensor) else Tensor._create(other)
         out_data = self.data @ other_tensor.data
         out = Tensor._create(out_data, requires_grad=self.requires_grad or other_tensor.requires_grad)
