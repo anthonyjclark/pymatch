@@ -306,6 +306,32 @@ class Tensor:
         out._backward = _backward
         return out
 
+    def exp(self) -> Tensor:
+        out = Tensor._create(self.data.exp(), requires_grad=self.requires_grad)
+        out._children = (self,)
+        out._label = "exp"
+
+        def _backward() -> None:
+            if self.requires_grad and out.grad:
+                g = out.grad * out.data
+                self.grad = self.grad + g if self.grad is not None else g
+
+        out._backward = _backward
+        return out
+
+    def log(self) -> Tensor:
+        out = Tensor._create(self.data.log(), requires_grad=self.requires_grad)
+        out._children = (self,)
+        out._label = "log"
+
+        def _backward() -> None:
+            if self.requires_grad and out.grad:
+                g = out.grad / self.data
+                self.grad = self.grad + g if self.grad is not None else g
+
+        out._backward = _backward
+        return out
+
     def sum(self, axis: int | Shape | None = None, keepdims: bool = False) -> Tensor:
         out = Tensor._create(self.data.sum(axis=axis, keepdims=keepdims), requires_grad=self.requires_grad)
         out._children = (self,)

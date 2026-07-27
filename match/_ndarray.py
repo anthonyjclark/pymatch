@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from math import exp, tanh
+from math import exp, log, tanh
 from typing import cast
 
 type NestedSequence[T] = T | Sequence[NestedSequence[T]]
@@ -349,6 +349,12 @@ class NDArray:
 
     def tanh(self) -> NDArray:
         return NDArray([tanh(x) for x in self.data], shape=self.shape)
+
+    def exp(self) -> NDArray:
+        return NDArray([exp(x) for x in self.data], shape=self.shape)
+
+    def log(self) -> NDArray:
+        return NDArray([log(x) for x in self.data], shape=self.shape)
 
     def sum(self, axis: int | Shape | None = None, keepdims: bool = False) -> NDArray:
         if axis is None:
