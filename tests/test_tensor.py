@@ -7,7 +7,7 @@ import match
 
 class TestTensor(unittest.TestCase):
     def test_tensor_init(self):
-        match_t = match.Tensor([1.0, 2.0, 3.0], requires_grad=True)
+        match_t = match.tensor([1.0, 2.0, 3.0], requires_grad=True)
         torch_t = torch.tensor([1.0, 2.0, 3.0], requires_grad=True)
 
         self.assertEqual(match_t.shape, tuple(torch_t.shape))
@@ -29,7 +29,7 @@ class TestTensor(unittest.TestCase):
         self.assertAlmostEqual(match_y.grad.item(), torch_y.grad.item())
 
     def test_pow(self):
-        match_x = match.Tensor([2.0, 3.0, 4.0], requires_grad=True)
+        match_x = match.tensor([2.0, 3.0, 4.0], requires_grad=True)
         match_y = match_x**3.0
         match_loss = match_y.sum()
         match_loss.backward()
@@ -43,8 +43,8 @@ class TestTensor(unittest.TestCase):
         self.assertEqual(match_x.grad.tolist(), torch_x.grad.tolist())
 
     def test_matmul_gradient(self):
-        match_A = match.Tensor([[1.0, 2.0], [3.0, 4.0]], requires_grad=True)
-        match_B = match.Tensor([[5.0, 6.0], [7.0, 8.0]], requires_grad=True)
+        match_A = match.tensor([[1.0, 2.0], [3.0, 4.0]], requires_grad=True)
+        match_B = match.tensor([[5.0, 6.0], [7.0, 8.0]], requires_grad=True)
         match_C = match_A @ match_B
         loss = match_C.sum()
         loss.backward()
@@ -60,7 +60,7 @@ class TestTensor(unittest.TestCase):
         self.assertEqual(match_B.grad.tolist(), torch_B.grad.tolist())
 
     def test_activations(self):
-        match_x = match.Tensor([-2.0, 0.0, 3.0], requires_grad=True)
+        match_x = match.tensor([-2.0, 0.0, 3.0], requires_grad=True)
         match_y = match_x.relu()
         match_y.sum().backward()
 
