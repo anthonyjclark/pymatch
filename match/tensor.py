@@ -1,20 +1,58 @@
+from __future__ import annotations
+
 import random
+from collections.abc import Callable
 
-from ._ndarray import NDArray
+from ._ndarray import NDArray, NestedArray, Scalar, Shape, _shape_cast, _shape_to_size
+
+# TODO: maybe remove this?
+type OperandInput = Scalar | Tensor
 
 
-def manual_seed(seed: int):
+def manual_seed(seed: int) -> None:
     random.seed(seed)
 
 
-def _unbroadcast(grad: NDArray, target_shape: tuple) -> NDArray:
+def tensor(data: Tensor | NestedArray | Scalar, requires_grad: bool = False) -> Tensor:
+    return Tensor._create(data, requires_grad=requires_grad)
+
+
+def zeros(*shape: int | tuple[int, ...], requires_grad: bool = False) -> Tensor:
+    shape_tup = _shape_cast(*shape)
+    size = _shape_to_size(shape_tup)
+    return Tensor._create(NDArray([0.0] * size, shape=shape_tup), requires_grad=requires_grad)
+
+
+def ones(*shape: Shape, requires_grad: bool = False) -> Tensor:
+    shape_tup = _shape_cast(*shape)
+    size = _shape_to_size(shape_tup)
+    return Tensor._create(NDArray([1.0] * size, shape=shape_tup), requires_grad=requires_grad)
+
+
+def randn(*shape: Shape, requires_grad: bool = False) -> Tensor:
+    shape_tup = _shape_cast(*shape)
+    size = _shape_to_size(shape_tup)
+    data = [random.gauss(0, 1) for _ in range(size)]
+    return Tensor._create(NDArray(data, shape=shape_tup), requires_grad=requires_grad)
+
+
+def rand(*shape: Shape, requires_grad: bool = False) -> Tensor:
+    shape_tup = _shape_cast(*shape)
+    size = _shape_to_size(shape_tup)
+    data = [random.random() for _ in range(size)]
+    return Tensor._create(NDArray(data, shape=shape_tup), requires_grad=requires_grad)
+
+
+# TODO: maybe move to _ndarray.py
+def _unbroadcast(grad: NDArray, target_shape: Shape) -> NDArray:
     if grad.shape == target_shape:
         return grad
+
     ndim_diff = grad.ndim - len(target_shape)
     if ndim_diff > 0:
         grad = grad.sum(axis=tuple(range(ndim_diff)), keepdims=False)
 
-    axes_to_sum = []
+    axes_to_sum: list[int] = []
     for i, (g_dim, t_dim) in enumerate(zip(grad.shape, target_shape)):
         if t_dim == 1 and g_dim > 1:
             axes_to_sum.append(i)
@@ -27,70 +65,79 @@ def _unbroadcast(grad: NDArray, target_shape: tuple) -> NDArray:
 
 
 class Tensor:
-    def __init__(self, data, requires_grad=False):
-        """
-        Initialize a Tensor.
+    """
+    A tensor is a multi-dimensional array of numbers with support for automatic differentiation. It can be used to perform mathematical operations and track gradients for optimization purposes.
 
-        Args:
-            data: The data to initialize the tensor with.
-            requires_grad: Whether the tensor requires gradient computation.
-        """
+    To construct a Tensor, use the `tensor` function.
+    """
+
+    data: NDArray
+    requires_grad: bool
+    grad: NDArray | None
+
+    _children: tuple[Tensor, ...] | None
+    _backward: Callable[[], None]
+    _label: str
+
+    @staticmethod
+    def _create(data: Tensor | NDArray | NestedArray, requires_grad: bool = False) -> Tensor:
+        tensor = Tensor.__new__(Tensor)
+
         if isinstance(data, Tensor):
-            self.data = data.data.copy()
+            tensor.data = data.data.copy()
         elif isinstance(data, NDArray):
-            self.data = data.copy()
+            tensor.data = data.copy()
         else:
-            self.data = NDArray(data)
+            tensor.data = NDArray(data)
 
-        self.requires_grad = requires_grad
-        self.grad = None
+        tensor.requires_grad = requires_grad
+        tensor.grad = None
         if requires_grad:
-            self.grad = NDArray([0.0] * self.data.size, shape=self.data.shape)
+            tensor.grad = NDArray([0.0] * tensor.data.size, shape=tensor.data.shape)
 
-        self.creator = None
-        self._backward = lambda: None
-        self.op_name = ""
+        tensor._children = None
+        tensor._backward = lambda: None
+        tensor._label = ""
+
+        return tensor
 
     @property
-    def shape(self):
+    def shape(self) -> Shape:
         return self.data.shape
 
     @property
-    def ndim(self):
+    def ndim(self) -> int:
         return self.data.ndim
 
-    def item(self):
+    def item(self) -> float:
         return self.data.item()
 
-    def zero_grad(self):
+    def zero_grad(self) -> None:
         if self.grad is not None:
             self.grad.fill(0.0)
 
-    def backward(self, gradient=None):
+    def backward(self, gradient_in: Tensor | None = None) -> None:
         if not self.requires_grad:
             return
 
-        if gradient is None:
+        if gradient_in is None:
             if self.shape == () or self.data.size == 1:
                 gradient = NDArray([1.0], shape=self.shape)
             else:
                 raise RuntimeError("Grad can be implicitly created only for scalar outputs")
-        elif not isinstance(gradient, NDArray):
-            gradient = NDArray(gradient, shape=self.shape)
+        elif isinstance(gradient_in, Tensor):
+            gradient = gradient_in.data
 
-        if self.grad is None:
-            self.grad = gradient
-        else:
-            self.grad = self.grad + gradient
+        self.grad = gradient if self.grad is None else self.grad + gradient
 
-        compute_graph = []
-        visited = set()
+        compute_graph: list[Tensor] = []
+        visited: set[Tensor] = set()
 
-        def topological_sort(v):
+        def topological_sort(v: Tensor) -> None:
             if v not in visited:
                 visited.add(v)
-                if v.creator is not None:
-                    for child in v.creator:
+                if v._children is not None:
+                    for child in v._children:
                         topological_sort(child)
                 compute_graph.append(v)
 
@@ -99,136 +146,136 @@ class Tensor:
         for node in reversed(compute_graph):
             node._backward()
 
-    def __add__(self, other):
-        other = other if isinstance(other, Tensor) else Tensor(other)
-        out_data = self.data + other.data
-        out = Tensor(out_data, requires_grad=self.requires_grad or other.requires_grad)
-        out.creator = (self, other)
-        out.op_name = "+"
+    def __add__(self, other: OperandInput) -> Tensor:
+        other_tensor = other if isinstance(other, Tensor) else Tensor._create(other)
+        out_data = self.data + other_tensor.data
+        out = Tensor._create(out_data, requires_grad=self.requires_grad or other_tensor.requires_grad)
+        out._children = (self, other_tensor)
+        out._label = "+"
 
-        def _backward():
+        def _backward() -> None:
             if self.requires_grad and out.grad:
                 g = _unbroadcast(out.grad, self.shape)
                 self.grad = self.grad + g if self.grad is not None else g
-            if other.requires_grad and out.grad:
-                g = _unbroadcast(out.grad, other.shape)
-                other.grad = other.grad + g if other.grad is not None else g
+            if other_tensor.requires_grad and out.grad:
+                g = _unbroadcast(out.grad, other_tensor.shape)
+                other_tensor.grad = other_tensor.grad + g if other_tensor.grad is not None else g
 
         out._backward = _backward
         return out
 
-    def __radd__(self, other):
-        return Tensor(other).__add__(self)
+    def __radd__(self, other: OperandInput) -> Tensor:
+        return Tensor._create(other).__add__(self)
 
-    def __sub__(self, other):
-        other = other if isinstance(other, Tensor) else Tensor(other)
-        out_data = self.data - other.data
-        out = Tensor(out_data, requires_grad=self.requires_grad or other.requires_grad)
-        out.creator = (self, other)
-        out.op_name = "-"
+    def __sub__(self, other: OperandInput) -> Tensor:
+        other_tensor = other if isinstance(other, Tensor) else Tensor._create(other)
+        out_data = self.data - other_tensor.data
+        out = Tensor._create(out_data, requires_grad=self.requires_grad or other_tensor.requires_grad)
+        out._children = (self, other_tensor)
+        out._label = "-"
 
-        def _backward():
+        def _backward() -> None:
             if self.requires_grad and out.grad:
                 g = _unbroadcast(out.grad, self.shape)
                 self.grad = self.grad + g if self.grad is not None else g
-            if other.requires_grad and out.grad:
-                g = _unbroadcast(-out.grad, other.shape)
-                other.grad = other.grad + g if other.grad is not None else g
+            if other_tensor.requires_grad and out.grad:
+                g = _unbroadcast(-out.grad, other_tensor.shape)
+                other_tensor.grad = other_tensor.grad + g if other_tensor.grad is not None else g
 
         out._backward = _backward
         return out
 
-    def __rsub__(self, other):
-        return Tensor(other).__sub__(self)
+    def __rsub__(self, other: OperandInput) -> Tensor:
+        return Tensor._create(other).__sub__(self)
 
-    def __mul__(self, other):
-        other = other if isinstance(other, Tensor) else Tensor(other)
-        out_data = self.data * other.data
-        out = Tensor(out_data, requires_grad=self.requires_grad or other.requires_grad)
-        out.creator = (self, other)
-        out.op_name = "*"
+    def __mul__(self, other: OperandInput) -> Tensor:
+        other_tensor = other if isinstance(other, Tensor) else Tensor._create(other)
+        out_data = self.data * other_tensor.data
+        out = Tensor._create(out_data, requires_grad=self.requires_grad or other_tensor.requires_grad)
+        out._children = (self, other_tensor)
+        out._label = "*"
 
-        def _backward():
-            if self.requires_grad:
-                g = _unbroadcast(out.grad * other.data, self.shape)
+        def _backward() -> None:
+            if self.requires_grad and out.grad:
+                g = _unbroadcast(out.grad * other_tensor.data, self.shape)
                 self.grad = self.grad + g if self.grad is not None else g
-            if other.requires_grad:
-                g = _unbroadcast(out.grad * self.data, other.shape)
-                other.grad = other.grad + g if other.grad is not None else g
+            if other_tensor.requires_grad and out.grad:
+                g = _unbroadcast(out.grad * self.data, other_tensor.shape)
+                other_tensor.grad = other_tensor.grad + g if other_tensor.grad is not None else g
 
         out._backward = _backward
         return out
 
-    def __rmul__(self, other):
-        return Tensor(other).__mul__(self)
+    def __rmul__(self, other: OperandInput) -> Tensor:
+        return Tensor._create(other).__mul__(self)
 
-    def __truediv__(self, other):
-        other = other if isinstance(other, Tensor) else Tensor(other)
-        out_data = self.data / other.data
-        out = Tensor(out_data, requires_grad=self.requires_grad or other.requires_grad)
-        out.creator = (self, other)
-        out.op_name = "/"
+    def __truediv__(self, other: OperandInput) -> Tensor:
+        other_tensor = other if isinstance(other, Tensor) else Tensor._create(other)
+        out_data = self.data / other_tensor.data
+        out = Tensor._create(out_data, requires_grad=self.requires_grad or other_tensor.requires_grad)
+        out._children = (self, other_tensor)
+        out._label = "/"
 
-        def _backward():
-            if self.requires_grad:
-                g = _unbroadcast(out.grad / other.data, self.shape)
+        def _backward() -> None:
+            if self.requires_grad and out.grad:
+                g = _unbroadcast(out.grad / other_tensor.data, self.shape)
                 self.grad = self.grad + g if self.grad is not None else g
-            if other.requires_grad and out.grad:
-                g = _unbroadcast(-out.grad * self.data / (other.data**2), other.shape)
-                other.grad = other.grad + g if other.grad is not None else g
+            if other_tensor.requires_grad and out.grad:
+                g = _unbroadcast(-out.grad * self.data / (other_tensor.data**2), other_tensor.shape)
+                other_tensor.grad = other_tensor.grad + g if other_tensor.grad is not None else g
 
         out._backward = _backward
         return out
 
-    def __rtruediv__(self, other):
-        return Tensor(other).__truediv__(self)
+    def __rtruediv__(self, other: OperandInput) -> Tensor:
+        return Tensor._create(other).__truediv__(self)
 
-    def __pow__(self, other):
+    def __pow__(self, other: OperandInput) -> Tensor:
         p = other.data.data if isinstance(other, Tensor) else other
-        out_data = self.data**p
-        out = Tensor(out_data, requires_grad=self.requires_grad)
-        out.creator = (self,)
-        out.op_name = "**"
+        out_data = self.data**p  # type: ignore
+        out = Tensor._create(out_data, requires_grad=self.requires_grad)
+        out._children = (self,)
+        out._label = "**"
 
-        def _backward():
-            if self.requires_grad and isinstance(p, (int, float, NDArray)):
+        def _backward() -> None:
+            if self.requires_grad and out.grad and isinstance(p, (int, float, NDArray)):
                 g = _unbroadcast(out.grad * (p * (self.data ** (p - 1.0))), self.shape)
                 self.grad = self.grad + g if self.grad is not None else g
 
         out._backward = _backward
         return out
 
-    def __rpow__(self, other):
-        return Tensor(other).__pow__(self)
+    def __rpow__(self, other: OperandInput) -> Tensor:
+        return Tensor._create(other).__pow__(self)
 
-    def __neg__(self):
+    def __neg__(self) -> Tensor:
         return self * (-1.0)
 
-    def __matmul__(self, other):
-        other = other if isinstance(other, Tensor) else Tensor(other)
-        out_data = self.data @ other.data
-        out = Tensor(out_data, requires_grad=self.requires_grad or other.requires_grad)
-        out.creator = (self, other)
-        out.op_name = "@"
+    def __matmul__(self, other: OperandInput) -> Tensor:
+        other_tensor = other if isinstance(other, Tensor) else Tensor._create(other)
+        out_data = self.data @ other_tensor.data
+        out = Tensor._create(out_data, requires_grad=self.requires_grad or other_tensor.requires_grad)
+        out._children = (self, other_tensor)
+        out._label = "@"
 
-        def _backward():
+        def _backward() -> None:
             if self.requires_grad and out.grad:
-                g = out.grad @ other.data.T
+                g = out.grad @ other_tensor.data.T
                 self.grad = self.grad + g if self.grad is not None else g
-            if other.requires_grad:
+            if other_tensor.requires_grad and out.grad:
                 g = self.data.T @ out.grad
-                other.grad = other.grad + g if other.grad is not None else g
+                other_tensor.grad = other_tensor.grad + g if other_tensor.grad is not None else g
 
         out._backward = _backward
         return out
 
-    def relu(self):
-        out = Tensor(self.data.relu(), requires_grad=self.requires_grad)
-        out.creator = (self,)
-        out.op_name = "relu"
+    def relu(self) -> Tensor:
+        out = Tensor._create(self.data.relu(), requires_grad=self.requires_grad)
+        out._children = (self,)
+        out._label = "relu"
 
-        def _backward():
-            if self.requires_grad:
+        def _backward() -> None:
+            if self.requires_grad and out.grad:
                 mask = NDArray([1.0 if x > 0.0 else 0.0 for x in self.data.data], shape=self.shape)
                 g = out.grad * mask
                 self.grad = self.grad + g if self.grad is not None else g
@@ -236,45 +283,45 @@ class Tensor:
         out._backward = _backward
         return out
 
-    def sigmoid(self):
-        out = Tensor(self.data.sigmoid(), requires_grad=self.requires_grad)
-        out.creator = (self,)
-        out.op_name = "sigmoid"
+    def sigmoid(self) -> Tensor:
+        out = Tensor._create(self.data.sigmoid(), requires_grad=self.requires_grad)
+        out._children = (self,)
+        out._label = "sigmoid"
 
-        def _backward():
-            if self.requires_grad:
+        def _backward() -> None:
+            if self.requires_grad and out.grad:
                 g = out.grad * out.data * (1.0 - out.data)
                 self.grad = self.grad + g if self.grad is not None else g
 
         out._backward = _backward
         return out
 
-    def tanh(self):
-        out = Tensor(self.data.tanh(), requires_grad=self.requires_grad)
-        out.creator = (self,)
-        out.op_name = "tanh"
+    def tanh(self) -> Tensor:
+        out = Tensor._create(self.data.tanh(), requires_grad=self.requires_grad)
+        out._children = (self,)
+        out._label = "tanh"
 
-        def _backward():
-            if self.requires_grad:
+        def _backward() -> None:
+            if self.requires_grad and out.grad:
                 g = out.grad * (1.0 - (out.data**2))
                 self.grad = self.grad + g if self.grad is not None else g
 
         out._backward = _backward
         return out
 
-    def sum(self, axis=None, keepdims=False):
-        out = Tensor(self.data.sum(axis=axis, keepdims=keepdims), requires_grad=self.requires_grad)
-        out.creator = (self,)
-        out.op_name = "sum"
+    def sum(self, axis: int | Shape | None = None, keepdims: bool = False) -> Tensor:
+        out = Tensor._create(self.data.sum(axis=axis, keepdims=keepdims), requires_grad=self.requires_grad)
+        out._children = (self,)
+        out._label = "sum"
 
-        def _backward():
+        def _backward() -> None:
             if self.requires_grad and out.grad:
                 expanded_grad = out.grad
                 if not keepdims and axis is not None:
                     axes = (axis,) if isinstance(axis, int) else axis
-                    axes = tuple(a % self.ndim for a in axes)
+                    axes_normalized = tuple(a % self.ndim for a in axes)
                     new_shape = list(self.shape)
-                    for a in axes:
+                    for a in axes_normalized:
                         new_shape[a] = 1
                     expanded_grad = expanded_grad.reshape(*new_shape)
 
@@ -285,7 +332,7 @@ class Tensor:
         out._backward = _backward
         return out
 
-    def mean(self, axis=None, keepdims=False):
+    def mean(self, axis: int | Shape | None = None, keepdims: bool = False) -> Tensor:
         s = self.sum(axis=axis, keepdims=keepdims)
         num_elem = self.data.size if axis is None else 1
         if axis is not None:
@@ -294,12 +341,12 @@ class Tensor:
                 num_elem *= self.shape[a % self.ndim]
         return s / float(num_elem)
 
-    def reshape(self, *new_shape):
-        out = Tensor(self.data.reshape(*new_shape), requires_grad=self.requires_grad)
-        out.creator = (self,)
-        out.op_name = "reshape"
+    def reshape(self, *new_shape: Shape) -> Tensor:
+        out = Tensor._create(self.data.reshape(*new_shape), requires_grad=self.requires_grad)
+        out._children = (self,)
+        out._label = "reshape"
 
-        def _backward():
+        def _backward() -> None:
             if self.requires_grad and out.grad is not None:
                 g = out.grad.reshape(*self.shape)
                 self.grad = self.grad + g if self.grad is not None else g
@@ -307,47 +354,5 @@ class Tensor:
         out._backward = _backward
         return out
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Tensor({self.data}, requires_grad={self.requires_grad})"
-
-
-def tensor(data, requires_grad=False):
-    return Tensor(data, requires_grad=requires_grad)
-
-
-def zeros(*shape, requires_grad=False):
-    if len(shape) == 1 and isinstance(shape[0], (list, tuple)):
-        shape = tuple(shape[0])
-    size = 1
-    for d in shape:
-        size *= d
-    return Tensor(NDArray([0.0] * size, shape=shape), requires_grad=requires_grad)
-
-
-def ones(*shape, requires_grad=False):
-    if len(shape) == 1 and isinstance(shape[0], (list, tuple)):
-        shape = tuple(shape[0])
-    size = 1
-    for d in shape:
-        size *= d
-    return Tensor(NDArray([1.0] * size, shape=shape), requires_grad=requires_grad)
-
-
-def randn(*shape, requires_grad=False):
-    if len(shape) == 1 and isinstance(shape[0], (list, tuple)):
-        shape = tuple(shape[0])
-    size = 1
-    for d in shape:
-        size *= d
-    data = [random.gauss(0, 1) for _ in range(size)]
-    return Tensor(NDArray(data, shape=shape), requires_grad=requires_grad)
-
-
-def rand(*shape, requires_grad=False):
-    if len(shape) == 1 and isinstance(shape[0], (list, tuple)):
-        shape = tuple(shape[0])
-    size = 1
-    for d in shape:
-        size *= d
-    data = [random.random() for _ in range(size)]
-    return Tensor(NDArray(data, shape=shape), requires_grad=requires_grad)
