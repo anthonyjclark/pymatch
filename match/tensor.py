@@ -20,20 +20,20 @@ def zeros(*shape: int | tuple[int, ...], requires_grad: bool = False) -> Tensor:
     return Tensor._create(NDArray([0.0] * size, shape=shape_tup), requires_grad=requires_grad)
 
 
-def ones(*shape: Shape, requires_grad: bool = False) -> Tensor:
+def ones(*shape: int | Shape, requires_grad: bool = False) -> Tensor:
     shape_tup = _shape_cast(*shape)
     size = _shape_to_size(shape_tup)
     return Tensor._create(NDArray([1.0] * size, shape=shape_tup), requires_grad=requires_grad)
 
 
-def randn(*shape: Shape, requires_grad: bool = False) -> Tensor:
+def randn(*shape: int | Shape, requires_grad: bool = False) -> Tensor:
     shape_tup = _shape_cast(*shape)
     size = _shape_to_size(shape_tup)
     data = [random.gauss(0, 1) for _ in range(size)]
     return Tensor._create(NDArray(data, shape=shape_tup), requires_grad=requires_grad)
 
 
-def rand(*shape: Shape, requires_grad: bool = False) -> Tensor:
+def rand(*shape: int | Shape, requires_grad: bool = False) -> Tensor:
     shape_tup = _shape_cast(*shape)
     size = _shape_to_size(shape_tup)
     data = [random.random() for _ in range(size)]

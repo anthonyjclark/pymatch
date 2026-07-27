@@ -1,12 +1,13 @@
-from .tensor import Tensor, manual_seed, ones, rand, randn, tensor, zeros
+from . import nn
+from .tensor import manual_seed, ones, rand, randn, tensor, zeros
 
 __version__ = "0.1.0"
 __all__ = [
-    "Tensor",
+    "manual_seed",
+    "nn",
+    "ones",
+    "rand",
+    "randn",
     "tensor",
     "zeros",
-    "ones",
-    "randn",
-    "rand",
-    "manual_seed",
 ]
