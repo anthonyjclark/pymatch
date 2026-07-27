@@ -1,6 +1,21 @@
 import "./style.css";
 import { loadPyodide } from "pyodide";
 
+// Configure and initialize MathJax npm dependency
+window.MathJax = {
+  tex: {
+    inlineMath: [
+      ["$", "$"],
+      ["\\(", "\\)"],
+    ],
+    displayMath: [
+      ["$$", "$$"],
+      ["\\[", "\\]"],
+    ],
+  },
+};
+import "mathjax/es5/tex-mml-chtml.js";
+
 const codeInput = document.getElementById("code-input") as HTMLTextAreaElement | null;
 const runBtn = document.getElementById("run-btn") as HTMLButtonElement | null;
 const outputText = document.getElementById("output-text") as HTMLPreElement | null;
