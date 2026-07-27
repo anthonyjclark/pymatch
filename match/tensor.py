@@ -364,7 +364,7 @@ class Tensor:
                 num_elem *= self.shape[a % self.ndim]
         return s / float(num_elem)
 
-    def reshape(self, *new_shape: Shape) -> Tensor:
+    def reshape(self, *new_shape: int | Shape) -> Tensor:
         out = Tensor._create(self.data.reshape(*new_shape), requires_grad=self.requires_grad)
         out._children = (self,)
         out._label = "reshape"

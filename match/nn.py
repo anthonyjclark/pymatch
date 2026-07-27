@@ -65,3 +65,34 @@ class MSELoss(Module):
     def forward(self, x: Tensor, target: Tensor) -> Tensor:
         diff = x - target
         return (diff * diff).mean()
+
+
+class CrossEntropyLoss(Module):
+    def forward(self, x: Tensor, target: Tensor) -> Tensor:
+        if x.ndim == 1:
+            x = x.reshape(1, -1)
+
+        if target.ndim == 1 and target.shape != (x.shape[0],):
+            target = target.reshape(1, -1)
+
+        N, C = x.shape
+
+        max_val = x.data.data[0]
+        for val in x.data.data:
+            max_val = max(max_val, val)
+        exp_input = (x - max_val).exp()
+
+        sum_exp = exp_input.sum(axis=1, keepdims=True)
+        log_softmax = (x - max_val) - sum_exp.log()
+
+        if target.shape == x.shape:
+            loss = -(target * log_softmax).sum() / float(N)
+        else:
+            target_data = [0.0] * (N * C)
+            indices = [int(x) for x in target.data.data]
+            for i, idx in enumerate(indices):
+                target_data[i * C + idx] = 1.0
+            target_tensor = tensor(target_data, requires_grad=False).reshape(N, C)
+            loss = -(target_tensor * log_softmax).sum() / float(N)
+
+        return loss
