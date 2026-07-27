@@ -3,6 +3,7 @@
         "autograd",
         "filterwarnings",
         "keepdims",
+        "pyodide",
         "pytest",
         "randn",
         "setuptools",
