@@ -2,6 +2,7 @@
 .github/
 dist/
 .venv/
+*.whl
 
 # From Vite
 # Logs
