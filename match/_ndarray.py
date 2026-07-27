@@ -1,20 +1,41 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from math import exp, prod, tanh
+from math import exp, tanh
+from typing import cast
 
-type Item = int | float
 type NestedSequence[T] = T | Sequence[NestedSequence[T]]
-type NestedItems = Item | Sequence[NestedItems[Item]]
+
+# TODO: consider numbers.Real and numbers.Integral
+type Scalar = int | float
+type NestedArray = Scalar | Sequence[NestedArray[Scalar]]
 type NestedInts = int | Sequence[NestedInts[int]]
 type Shape = tuple[int, ...]
 type Index = NestedInts | NDArray
 type BinaryOp[T] = Callable[[T, T], T]
 
 
+def _shape_cast(*shape: int | Shape) -> Shape:
+    if len(shape) == 1 and isinstance(shape[0], tuple):
+        return tuple(shape[0])
+    return cast(Shape, shape)
+
+
+def _shape_to_size(shape: Shape) -> int:
+    size = 1
+    for d in shape:
+        size *= d
+    return size
+
+
 class NDArray:
+    data: list[Scalar]
+    shape: Shape
+    strides: Shape
+    dtype: type[Scalar]
+
     def __init__(
-        self, data: NestedItems | NDArray, shape: int | Shape | None = None, dtype: type[Item] = float
+        self, data: NestedArray | NDArray, shape: int | Shape | None = None, dtype: type[Scalar] = float
     ) -> None:
         """
         Initialize an NDArray.
@@ -24,12 +45,9 @@ class NDArray:
             shape: The shape of the array. If None, inferred from data.
             dtype: The data type of the array elements.
         """
-        self.data: list[Item]
-        self.shape: Shape
-        self.strides: Shape
-        self.dtype: type[Item] = dtype
 
         # TODO: enforce dtype on data
+        self.dtype = dtype
 
         if isinstance(shape, int):
             shape = (shape,)
@@ -53,21 +71,21 @@ class NDArray:
             raise TypeError(f"Unsupported data type for NDArray: {type(data)}")
 
         n = len(self.data)
-        shape_n = prod(self.shape)
+        shape_n = _shape_to_size(self.shape)
         if (not self.shape and n != 1) or (shape_n != n):
             raise ValueError(f"Data size {n} does not match size {shape_n} for shape {self.shape}")
 
         self.strides = self._calc_strides(self.shape)
 
     @staticmethod
-    def _flatten(seq: NestedItems) -> tuple[list[Item], Shape]:
+    def _flatten(seq: NestedArray) -> tuple[list[Scalar], Shape]:
         if isinstance(seq, (int, float)):
             return [seq], ()
 
         if isinstance(seq, (list, tuple)) and len(seq) == 0:
             return [], (0,)
 
-        flat: list[Item] = []
+        flat: list[Scalar] = []
         elem_shapes: list[Shape] = []
 
         assert isinstance(seq, (list, tuple))
@@ -85,7 +103,7 @@ class NDArray:
         return flat, (dim0,) + sub_shape
 
     """
-    And unflatten
+    TODO: Implement unflatten
     """
 
     @staticmethod
@@ -121,11 +139,11 @@ class NDArray:
             raise ValueError("can only convert an array of size 1 to a Python scalar")
         return float(self.data[0])
 
-    def tolist(self) -> NestedItems:
+    def tolist(self) -> NestedArray:
         if self.size == 1:
             return list(self.data)
 
-        def _unflatten(data: list[Item], shape: Shape) -> NestedItems:
+        def _unflatten(data: list[Scalar], shape: Shape) -> NestedArray:
             if len(shape) == 1:
                 return list(data)
 
@@ -138,26 +156,25 @@ class NDArray:
         return _unflatten(self.data, self.shape)
 
     def reshape(self, *shape: int | Shape) -> NDArray:
-        if len(shape) == 1 and isinstance(shape[0], tuple):
-            shape = shape[0]
+        shape_tup = _shape_cast(*shape)
 
-        if -1 in shape:
-            neg_idx = shape.index(-1)
+        if -1 in shape_tup:
+            neg_idx = shape_tup.index(-1)
             known_prod = 1
-            for i, d in enumerate(shape):
+            for i, d in enumerate(shape_tup):
                 if i != neg_idx:
-                    known_prod *= d  # type: ignore
-            calc_dim = self.size // known_prod  # type: ignore
-            shape = shape[:neg_idx] + (calc_dim,) + shape[neg_idx + 1 :]
+                    known_prod *= d
+            calc_dim = self.size // known_prod
+            shape_tup = shape_tup[:neg_idx] + (calc_dim,) + shape_tup[neg_idx + 1 :]
 
         new_size = 1
-        for d in shape:
-            new_size *= d  # type: ignore
+        for d in shape_tup:
+            new_size *= d
 
         if new_size != self.size:
-            raise ValueError(f"Cannot reshape array of size {self.size} into shape {shape}")
+            raise ValueError(f"Cannot reshape array of size {self.size} into shape {shape_tup}")
 
-        return NDArray(list(self.data), shape=shape)  # type: ignore
+        return NDArray(list(self.data), shape=shape_tup)
 
     @property
     def T(self) -> NDArray:
