@@ -1,3 +1,12 @@
+# TODO: remove these comments
+docs/
+examples/
+.github/
+
+dist/
+.venv/
+node_modules/
+
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
 
