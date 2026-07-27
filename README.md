@@ -42,5 +42,9 @@ npm run build
 Run the unit test suite using `uv`:
 
 ```bash
+# Run all test
+uv run pytest
+
+# Run specific test file
 uv run pytest tests/test_tensor.py
 ```
