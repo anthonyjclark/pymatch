@@ -1,45 +1,56 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="PyMatch is an educational library for neural networks." />
+    <title>PyMatch</title>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="PyMatch is an educational library for neural networks." />
-  <title>PyMatch</title>
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [
+            ["$", "$"],
+            ["\\(", "\\)"],
+          ],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"],
+          ],
+        },
+      };
+    </script>
+    <script
+      id="MathJax-script"
+      async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+    ></script>
+  </head>
 
-  <script>
-    MathJax = {
-      tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$', '$$'], ['\\[', '\\]']]
-      }
-    };
-  </script>
-  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-</head>
+  <body>
+    <header>
+      <h1>Welcome to PyMatch</h1>
+    </header>
 
-<body>
-  <header>
-    <h1>Welcome to PyMatch</h1>
-  </header>
+    <main>
+      <p>PyMatch is an educational library for neural networks.</p>
 
-  <main>
-    <p>PyMatch is an educational library for neural networks.</p>
-    
-    <div id="math-container">
-      <h3>Mathematical Example</h3>
-      <p>Consider the function:</p>
-      \[ f(x, y) = x^2 y + 4x \]
-      <p>Evaluated at $x = 3.0$ and $y = -2.0$:</p>
-      \[ f(3, -2) = (3.0)^2 (-2.0) + 4.0(3.0) = -18.0 + 12.0 = -6.0 \]
-      <p>The partial derivatives are:</p>
-      \[ \frac{\partial f}{\partial x} = 2xy + 4 \implies \frac{\partial f}{\partial x}(3, -2) = 2(3.0)(-2.0) + 4.0 = -8.0 \]
-      \[ \frac{\partial f}{\partial y} = x^2 \implies \frac{\partial f}{\partial y}(3, -2) = (3.0)^2 = 9.0 \]
-    </div>
+      <div id="math-container">
+        <h3>Mathematical Example</h3>
+        <p>Consider the function:</p>
+        \[ f(x, y) = x^2 y + 4x \]
+        <p>Evaluated at $x = 3.0$ and $y = -2.0$:</p>
+        \[ f(3, -2) = (3.0)^2 (-2.0) + 4.0(3.0) = -18.0 + 12.0 = -6.0 \]
+        <p>The partial derivatives are:</p>
+        \[ \frac{\partial f}{\partial x} = 2xy + 4 \implies \frac{\partial f}{\partial x}(3, -2) =
+        2(3.0)(-2.0) + 4.0 = -8.0 \] \[ \frac{\partial f}{\partial y} = x^2 \implies \frac{\partial
+        f}{\partial y}(3, -2) = (3.0)^2 = 9.0 \]
+      </div>
 
-    <div id="app">
-      <label for="code-input"><strong>Type Python code using PyMatch:</strong></label>
-      <textarea id="code-input" rows="10" placeholder="Type Python code using PyMatch...">import match
+      <div id="app">
+        <label for="code-input"><strong>Type Python code using PyMatch:</strong></label>
+        <textarea id="code-input" rows="10" placeholder="Type Python code using PyMatch...">
+import match
 
 x = match.tensor([3.0], requires_grad=True)
 y = match.tensor([-2.0], requires_grad=True)
@@ -50,20 +61,19 @@ f.backward()
 print("f(x, y) =", f.item())
 print("df/dx =", x.grad.item())
 print("df/dy =", y.grad.item())</textarea>
-      <button id="run-btn">Run Code</button>
+        <button id="run-btn">Run Code</button>
 
-      <div id="output-container">
-        <h3>Output:</h3>
-        <pre id="output-text">Loading Pyodide...</pre>
+        <div id="output-container">
+          <h3>Output:</h3>
+          <pre id="output-text">Loading Pyodide...</pre>
+        </div>
       </div>
-    </div>
-  </main>
+    </main>
 
-  <footer>
-    <p>&copy; 2026 Anthony J. Clark. All rights reserved.</p>
-  </footer>
+    <footer>
+      <p>&copy; 2026 Anthony J. Clark. All rights reserved.</p>
+    </footer>
 
-  <script type="module" src="/src/main.ts"></script>
-</body>
-
+    <script type="module" src="/src/main.ts"></script>
+  </body>
 </html>

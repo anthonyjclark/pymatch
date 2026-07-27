@@ -4,6 +4,7 @@
         "filterwarnings",
         "keepdims",
         "pyodide",
+        "pyproject",
         "pytest",
         "randn",
         "setuptools",

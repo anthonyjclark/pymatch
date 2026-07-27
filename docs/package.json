@@ -3,7 +3,20 @@
   "private"        : true,
   "version"        : "0.0.0",
   "type"           : "module",
-  "scripts"        : {"dev": "vite", "build": "tsc && vite build", "preview": "vite preview", "test": "vitest run"},
-  "devDependencies": {"@types/node": "^26.1.2", "typescript": "~6.0.2", "vite": "^8.1.1", "vitest": "^4.1.10"},
-  "dependencies"   : {"pyodide": "^314.0.3"}
+  "scripts"        : {
+    "dev"         : "vite",
+    "build"       : "tsc && vite build",
+    "preview"     : "vite preview",
+    "test"        : "vitest run",
+    "format"      : "oxfmt",
+    "format:check": "oxfmt --check"
+  },
+  "dependencies"   : {"pyodide": "^314.0.3"},
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "oxfmt"      : "^0.61.0",
+    "typescript" : "~6.0.2",
+    "vite"       : "^8.1.1",
+    "vitest"     : "^4.1.10"
+  }
 }
