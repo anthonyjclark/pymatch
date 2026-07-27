@@ -54,3 +54,10 @@ uv run pytest
 # Run specific test file
 uv run pytest tests/test_tensor.py
 ```
+
+## Features
+
+- [ ] Add full site search
+- [ ] Add more interactive tutorials
+- [ ] Add more PyTorch functionality
+- [ ] Add syntax highlighting for code blocks
