@@ -16,9 +16,19 @@
   <main>
     <p>PyMatch is an educational library for neural networks.</p>
     <div id="app">
-      <label for="code-input"><strong>Type a Python expression:</strong></label>
-      <textarea id="code-input" rows="4" placeholder="Type a Python expression e.g. 4 + 2">4 + 2</textarea>
-      <button id="run-btn">Run Expression</button>
+      <label for="code-input"><strong>Type Python code using PyMatch:</strong></label>
+      <textarea id="code-input" rows="10" placeholder="Type Python code using PyMatch...">import match
+
+x = match.tensor([3.0], requires_grad=True)
+y = match.tensor([-2.0], requires_grad=True)
+
+f = x * x * y + 4.0 * x
+f.backward()
+
+print("f(x, y) =", f.item())
+print("df/dx =", x.grad.item())
+print("df/dy =", y.grad.item())</textarea>
+      <button id="run-btn">Run Code</button>
       
       <div id="output-container">
         <h3>Output:</h3>
