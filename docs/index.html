@@ -15,7 +15,16 @@
 
   <main>
     <p>PyMatch is an educational library for neural networks.</p>
-    <div id="app"></div>
+    <div id="app">
+      <label for="code-input"><strong>Type a Python expression:</strong></label>
+      <textarea id="code-input" rows="4" placeholder="Type a Python expression e.g. 4 + 2">4 + 2</textarea>
+      <button id="run-btn">Run Expression</button>
+      
+      <div id="output-container">
+        <h3>Output:</h3>
+        <pre id="output-text">Loading Pyodide...</pre>
+      </div>
+    </div>
   </main>
 
   <footer>
