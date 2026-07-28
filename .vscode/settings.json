@@ -3,12 +3,15 @@
         "autograd",
         "filterwarnings",
         "keepdims",
+        "MNIS",
+        "mnist",
         "pyodide",
         "pyproject",
         "pytest",
         "randn",
         "setuptools",
         "unbroadcast",
-        "unflatten"
+        "unflatten",
+        "unshuffled"
     ]
 }

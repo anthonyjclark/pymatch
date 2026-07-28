@@ -42,6 +42,21 @@ async function init() {
     const wheelUrl = new URL(`/${__MATCH_WHEEL_NAME__}`, window.location.origin).href;
     await pyodide.loadPackage(wheelUrl);
 
+    // Pre-fetch preprocessed MNIST dataset into Pyodide's virtual filesystem
+    try {
+      const mnistUrl = new URL("/data/mnist.bin", window.location.origin).href;
+      const res = await fetch(mnistUrl);
+      if (res.ok) {
+        const binBuf = new Uint8Array(await res.arrayBuffer());
+        try {
+          pyodide.FS.mkdir("/data");
+        } catch (_) {}
+        pyodide.FS.writeFile("/data/mnist.bin", binBuf);
+      }
+    } catch (e) {
+      console.warn("MNIST pre-fetch warning:", e);
+    }
+
     if (outputText) {
       outputText.textContent = `PyMatch v${__MATCH_VERSION__} ready! Type Python code using match and click Run.`;
     }

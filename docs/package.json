@@ -5,6 +5,7 @@
   "type"           : "module",
   "scripts"        : {
     "build:docs"  : "node scripts/build-docs.js",
+    "build:mnist" : "node scripts/preprocess-mnist.js",
     "dev"         : "npm run build:docs && vite",
     "build"       : "npm run build:docs && tsc && vite build",
     "preview"     : "vite preview",
