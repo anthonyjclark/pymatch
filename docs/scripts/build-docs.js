@@ -27,9 +27,8 @@ const template = (title, contentHtml, filename) => `<!doctype html>
       <div class="header-container">
         <h1><a href="/index.html" style="color: inherit; text-decoration: none;">PyMatch Documentation</a></h1>
         <nav class="site-nav">
-          <a href="/index.html">Home</a>
-          <a href="/01-introduction.html" class="${filename === "01-introduction.html" ? "active" : ""}">1. Introduction</a>
-          <a href="/02-ethics.html" class="${filename === "02-ethics.html" ? "active" : ""}">2. Ethics</a>
+          <a href="/index.html" class="${filename === "index.html" ? "active" : ""}">Home</a>
+          <a href="/guide.html" class="${filename === "guide.html" ? "active" : ""}">Guide</a>
         </nav>
       </div>
     </header>
@@ -57,32 +56,97 @@ const template = (title, contentHtml, filename) => `<!doctype html>
 `;
 
 const scriptMtime = fs.statSync(__filename).mtimeMs;
-const mdFiles = fs.readdirSync(contentDir).filter((file) => file.endsWith(".md"));
+
+// Discover all markdown files in content directory (excluding any non-chapter files if needed)
+const mdFiles = fs
+  .readdirSync(contentDir)
+  .filter((file) => file.endsWith(".md"))
+  .sort();
+
+// Collect metadata for dynamic Table of Contents (guide page)
+const chapters = [];
+let maxContentMtime = 0;
 
 for (const file of mdFiles) {
   const filePath = path.join(contentDir, file);
-  const outFileName = file.replace(/\.md$/, ".html");
-  const outFilePath = path.join(rootDir, outFileName);
+  const mdContent = fs.readFileSync(filePath, "utf-8");
+  const stat = fs.statSync(filePath);
+  if (stat.mtimeMs > maxContentMtime) {
+    maxContentMtime = stat.mtimeMs;
+  }
 
-  const mdMtime = fs.statSync(filePath).mtimeMs;
+  // Extract title
+  const titleMatch = mdContent.match(/^#\s+(.+)$/m);
+  const title = titleMatch ? titleMatch[1].trim() : path.basename(file, ".md");
+
+  // Extract first paragraph for description (skipping title and quotes)
+  const paragraphMatch = mdContent
+    .split("\n")
+    .map((line) => line.trim())
+    .find((line) => line.length > 0 && !line.startsWith("#") && !line.startsWith(">") && !line.startsWith("<") && !line.startsWith("-"));
+
+  const description = paragraphMatch || "";
+
+  const outFileName = file.replace(/\.md$/, ".html");
+  chapters.push({
+    file,
+    outFileName,
+    title,
+    description,
+    mtimeMs: stat.mtimeMs,
+    filePath,
+    mdContent,
+  });
+}
+
+// 1. Build individual chapter pages
+for (const ch of chapters) {
+  const outFilePath = path.join(rootDir, ch.outFileName);
   const htmlExists = fs.existsSync(outFilePath);
   const htmlMtime = htmlExists ? fs.statSync(outFilePath).mtimeMs : 0;
 
-  const needsRebuild = !htmlExists || mdMtime > htmlMtime || scriptMtime > htmlMtime;
+  const needsRebuild = !htmlExists || ch.mtimeMs > htmlMtime || scriptMtime > htmlMtime;
 
   if (needsRebuild) {
-    const mdContent = fs.readFileSync(filePath, "utf-8");
-
-    // Extract title from first H1 heading if present
-    const titleMatch = mdContent.match(/^#\s+(.+)$/m);
-    const title = titleMatch ? titleMatch[1].trim() : path.basename(file, ".md");
-
-    const htmlBody = marked.parse(mdContent);
-    const fullHtml = template(title, htmlBody, outFileName);
-
+    const htmlBody = marked.parse(ch.mdContent);
+    const fullHtml = template(ch.title, htmlBody, ch.outFileName);
     fs.writeFileSync(outFilePath, fullHtml, "utf-8");
-    console.log(`Generated ${outFileName} from ${file}`);
+    console.log(`Generated ${ch.outFileName} from ${ch.file}`);
   } else {
-    console.log(`Skipped ${outFileName} (up to date)`);
+    console.log(`Skipped ${ch.outFileName} (up to date)`);
   }
+}
+
+// 2. Dynamically generate the Guide (Table of Contents) page: guide.html
+const guidePath = path.join(rootDir, "guide.html");
+const guideExists = fs.existsSync(guidePath);
+const guideMtime = guideExists ? fs.statSync(guidePath).mtimeMs : 0;
+const needsGuideRebuild = !guideExists || maxContentMtime > guideMtime || scriptMtime > guideMtime;
+
+if (needsGuideRebuild) {
+  const guideContentHtml = `
+    <h1>Educational Guide - Table of Contents</h1>
+    <p class="lead-text">
+      Welcome to the PyMatch educational neural network guide. Click on any chapter below to start reading:
+    </p>
+
+    <ul class="chapter-list">
+      ${chapters
+        .map(
+          (ch) => `
+        <li>
+          <a href="/${ch.outFileName}"><strong>${ch.title}</strong></a>
+          ${ch.description ? `<p>${ch.description}</p>` : ""}
+        </li>
+      `
+        )
+        .join("")}
+    </ul>
+  `;
+
+  const fullGuideHtml = template("Guide - Table of Contents", guideContentHtml, "guide.html");
+  fs.writeFileSync(guidePath, fullGuideHtml, "utf-8");
+  console.log("Generated guide.html (Table of Contents)");
+} else {
+  console.log("Skipped guide.html (up to date)");
 }
