@@ -239,6 +239,36 @@ a:hover {
   font-size: 0.95rem;
 }
 
+.chapter-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+  gap: 1rem;
+}
+
+.chapter-nav a {
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0.6rem 1.2rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  background-color: #f8fafc;
+  color: var(--primary-color);
+  transition:
+    background-color 0.2s,
+    border-color 0.2s,
+    color 0.2s;
+}
+
+.chapter-nav a:hover {
+  background-color: #ffffff;
+  border-color: #cbd5e1;
+  color: var(--primary-hover);
+}
+
 #math-container {
   margin: 1.5rem 0;
   padding: 1.25rem;

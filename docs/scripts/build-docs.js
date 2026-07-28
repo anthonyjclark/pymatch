@@ -57,7 +57,7 @@ const template = (title, contentHtml, filename) => `<!doctype html>
 
 const scriptMtime = fs.statSync(__filename).mtimeMs;
 
-// Discover all markdown files in content directory (excluding any non-chapter files if needed)
+// Discover all markdown files in content directory
 const mdFiles = fs
   .readdirSync(contentDir)
   .filter((file) => file.endsWith(".md"))
@@ -79,7 +79,7 @@ for (const file of mdFiles) {
   const titleMatch = mdContent.match(/^#\s+(.+)$/m);
   const title = titleMatch ? titleMatch[1].trim() : path.basename(file, ".md");
 
-  // Extract first paragraph for description (skipping title and quotes)
+  // Extract first paragraph for description
   const paragraphMatch = mdContent
     .split("\n")
     .map((line) => line.trim())
@@ -99,8 +99,12 @@ for (const file of mdFiles) {
   });
 }
 
-// 1. Build individual chapter pages
-for (const ch of chapters) {
+// 1. Build individual chapter pages with Prev/Next chapter navigation at bottom
+for (let i = 0; i < chapters.length; i++) {
+  const ch = chapters[i];
+  const prevCh = i > 0 ? chapters[i - 1] : null;
+  const nextCh = i < chapters.length - 1 ? chapters[i + 1] : null;
+
   const outFilePath = path.join(rootDir, ch.outFileName);
   const htmlExists = fs.existsSync(outFilePath);
   const htmlMtime = htmlExists ? fs.statSync(outFilePath).mtimeMs : 0;
@@ -108,7 +112,17 @@ for (const ch of chapters) {
   const needsRebuild = !htmlExists || ch.mtimeMs > htmlMtime || scriptMtime > htmlMtime;
 
   if (needsRebuild) {
-    const htmlBody = marked.parse(ch.mdContent);
+    let htmlBody = marked.parse(ch.mdContent);
+
+    // Append Previous / Next chapter navigation
+    const navHtml = `
+      <nav class="chapter-nav">
+        ${prevCh ? `<a href="/${prevCh.outFileName}" class="nav-prev">&larr; Previous: ${prevCh.title}</a>` : `<span></span>`}
+        ${nextCh ? `<a href="/${nextCh.outFileName}" class="nav-next">Next: ${nextCh.title} &rarr;</a>` : `<span></span>`}
+      </nav>
+    `;
+    htmlBody += navHtml;
+
     const fullHtml = template(ch.title, htmlBody, ch.outFileName);
     fs.writeFileSync(outFilePath, fullHtml, "utf-8");
     console.log(`Generated ${ch.outFileName} from ${ch.file}`);
