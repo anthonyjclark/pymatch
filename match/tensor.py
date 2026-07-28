@@ -113,6 +113,18 @@ class Tensor:
         if self.grad is not None:
             self.grad.fill(0.0)
 
+    def __len__(self) -> int:
+        if self.ndim == 0:
+            return 1
+        return self.shape[0]
+
+    def __getitem__(self, idx: Any) -> Tensor:
+        sub_data = self.data[idx]
+        if isinstance(sub_data, NDArray):
+            return Tensor._create(sub_data, requires_grad=self.requires_grad)
+        else:
+            return Tensor._create(NDArray([sub_data], shape=()), requires_grad=self.requires_grad)
+
     def backward(self, gradient_in: Tensor | None = None) -> None:
         if not self.requires_grad:
             return
