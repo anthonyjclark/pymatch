@@ -1,5 +1,4 @@
 import "./style.css";
-import { loadPyodide } from "pyodide";
 
 // Configure and initialize MathJax npm dependency
 window.MathJax = window.MathJax || {
@@ -26,88 +25,89 @@ const codeInput = document.getElementById("code-input") as HTMLTextAreaElement |
 const runBtn = document.getElementById("run-btn") as HTMLButtonElement | null;
 const outputText = document.getElementById("output-text") as HTMLPreElement | null;
 
-async function init() {
+function init() {
   if (outputText) {
-    outputText.textContent = "Loading Pyodide environment...";
+    outputText.textContent = "Initializing Pyodide Web Worker...";
+  }
+  if (runBtn) {
+    runBtn.disabled = true;
   }
 
-  try {
-    const pyodide = await loadPyodide();
+  // Create Pyodide background Web Worker (decouples WebAssembly from main UI thread)
+  const worker = new Worker(new URL("./pyodide.worker.ts", import.meta.url), { type: "module" });
 
-    if (outputText) {
-      outputText.textContent = `Loading PyMatch v${__MATCH_VERSION__}...`;
-    }
+  let isWorkerReady = false;
+  let isExecuting = false;
 
-    // Dynamically load PyMatch wheel defined from pyproject.toml
-    const wheelUrl = new URL(`/${__MATCH_WHEEL_NAME__}`, window.location.origin).href;
-    await pyodide.loadPackage(wheelUrl);
+  worker.postMessage({
+    type: "init",
+    wheelName: __MATCH_WHEEL_NAME__,
+    origin: window.location.origin,
+  });
 
-    // Pre-fetch preprocessed MNIST dataset into Pyodide's virtual filesystem
-    try {
-      const mnistUrl = new URL("/data/mnist.bin", window.location.origin).href;
-      const res = await fetch(mnistUrl);
-      if (res.ok) {
-        const binBuf = new Uint8Array(await res.arrayBuffer());
-        try {
-          pyodide.FS.mkdir("/data");
-        } catch (_) {}
-        pyodide.FS.writeFile("/data/mnist.bin", binBuf);
+  worker.onmessage = (e: MessageEvent) => {
+    const { type, text, output, error } = e.data;
+
+    if (type === "status") {
+      if (outputText && !isWorkerReady) {
+        outputText.textContent = text;
       }
-    } catch (e) {
-      console.warn("MNIST pre-fetch warning:", e);
-    }
-
-    if (outputText) {
-      outputText.textContent = `PyMatch v${__MATCH_VERSION__} ready! Type Python code using match and click Run.`;
-    }
-
-    const runExpression = () => {
-      if (!codeInput || !outputText) return;
-
-      let outputLogs: string[] = [];
-      pyodide.setStdout({
-        batched: (msg: string) => {
-          outputLogs.push(msg);
-        },
-      });
-
-      try {
-        const result = pyodide.runPython(codeInput.value);
-        let finalOutput = outputLogs.join("\n");
-        if (result !== undefined && result !== null) {
-          if (finalOutput.length > 0) {
-            finalOutput += "\n" + String(result);
-          } else {
-            finalOutput = String(result);
-          }
-        }
-        outputText.textContent = finalOutput.length > 0 ? finalOutput : "(No output)";
-      } catch (err) {
-        let errText = outputLogs.join("\n");
-        if (errText.length > 0) {
-          errText += "\n";
-        }
-        errText += String(err);
-        outputText.textContent = errText;
+    } else if (type === "ready") {
+      isWorkerReady = true;
+      if (outputText) {
+        outputText.textContent = `PyMatch v${__MATCH_VERSION__} ready! Type Python code using match and click Run.`;
       }
-    };
+      if (runBtn) {
+        runBtn.disabled = false;
+      }
+    } else if (type === "result") {
+      isExecuting = false;
+      if (runBtn) {
+        runBtn.disabled = false;
+        runBtn.textContent = "Run";
+      }
+      if (outputText) {
+        outputText.textContent = output;
+      }
+    } else if (type === "error") {
+      isExecuting = false;
+      if (runBtn) {
+        runBtn.disabled = false;
+        runBtn.textContent = "Run";
+      }
+      if (outputText) {
+        outputText.textContent = error;
+      }
+    }
+  };
 
+  const runExpression = () => {
+    if (!codeInput || !outputText || !isWorkerReady || isExecuting) return;
+
+    isExecuting = true;
     if (runBtn) {
-      runBtn.addEventListener("click", runExpression);
+      runBtn.disabled = true;
+      runBtn.textContent = "Running...";
     }
+    outputText.textContent = "Running Python code in background worker...";
 
-    if (codeInput) {
-      codeInput.addEventListener("keydown", (e: KeyboardEvent) => {
-        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-          e.preventDefault();
-          runExpression();
-        }
-      });
-    }
-  } catch (err) {
-    if (outputText) {
-      outputText.textContent = `Error loading Pyodide or PyMatch wheel: ${err}`;
-    }
+    worker.postMessage({
+      type: "run",
+      code: codeInput.value,
+    });
+  };
+
+  if (runBtn) {
+    runBtn.addEventListener("click", runExpression);
+  }
+
+  if (codeInput) {
+    codeInput.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        runExpression();
+      }
+    });
   }
 }
 

@@ -12,6 +12,9 @@ from ..utils.data import TensorDataset
 
 IN_PYODIDE = "pyodide" in sys.modules or sys.platform == "emscripten"
 
+_CACHE_FLAT: tuple[TensorDataset, TensorDataset] | None = None
+_CACHE_UNFLAT: tuple[TensorDataset, TensorDataset] | None = None
+
 
 def _parse_bin_file(bin_path: str) -> tuple[NDArray, NDArray, NDArray, NDArray]:
     with open(bin_path, "rb") as f:
@@ -77,6 +80,14 @@ def load_mnist_dataset(
     Raises:
         FileNotFoundError: If mnist.bin is not found.
     """
+    global _CACHE_FLAT, _CACHE_UNFLAT
+
+    if data_dir is None:
+        if flatten and _CACHE_FLAT is not None:
+            return _CACHE_FLAT
+        if not flatten and _CACHE_UNFLAT is not None:
+            return _CACHE_UNFLAT
+
     if IN_PYODIDE or "pyodide" in sys.modules:
         bin_path = "/data/mnist.bin"
     elif data_dir is not None:
@@ -103,7 +114,13 @@ def load_mnist_dataset(
     X_valid = Tensor._create(nd_vx)
     y_valid = Tensor._create(nd_vy)
 
-    return TensorDataset(X_train, y_train), TensorDataset(X_valid, y_valid)
+    dataset = (TensorDataset(X_train, y_train), TensorDataset(X_valid, y_valid))
+    if flatten:
+        _CACHE_FLAT = dataset
+    else:
+        _CACHE_UNFLAT = dataset
+
+    return dataset
 
 
 def get_binary_mnist_one_batch(
