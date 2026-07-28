@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="PyMatch - 4. Single Neuron" />
+    <title>PyMatch - 4. Single Neuron</title>
+  </head>
+
+  <body>
+    <header class="site-header">
+      <div class="header-container">
+        <h1><a href="/index.html" style="color: inherit; text-decoration: none;">PyMatch Documentation</a></h1>
+        <nav class="site-nav">
+          <a href="/index.html" class="">Home</a>
+          <a href="/guide.html" class="">Guide</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="content-container">
+      <div class="math-defs" style="display: none">
+        \[ \def\i{{^{(i)}}} \def\vx{{\mathbf{x}}} \def\vy{{\mathbf{y}}} \def\vw{{\mathbf{w}}}
+        \def\vb{{\mathbf{b}}} \def\vz{{\mathbf{z}}} \def\va{{\mathbf{a}}} \def\yhat{{\hat y}}
+        \def\vyhat{{\mathbf{\hat y}}} \def\mae{{||\vyhat - \vy||_1}} \def\vhmse{{\frac{1}{2N} ||(\vyhat
+        - \vy)^2||_1}} \def\vbce{{-\frac{1}{N}\sum_{i=1}^N (y\i \log{\yhat\i} + (1 - y\i)\log{(1-\yhat\i)})}} \]
+      </div>
+
+      <article class="doc-article">
+        <h1>4. Single Neuron</h1>
+<blockquote>
+<p>A single neuron in the brain is an incredibly complex machine that even today we don’t understand. A single “neuron” in a neural network is an incredibly simple mathematical function that captures a minuscule fraction of the complexity of a biological neuron.</p>
+<p>— <a href="https://www.wired.com/2015/02/google-brains-co-inventor-tells-why-hes-building-chinese-neural-networks/">Andrew Ng</a></p>
+</blockquote>
+<p>When our model is a single neuron we can only produce a single output. So, $n_y=1$ for this section. Sticking to our MNIST digits example from above, we could train a single neuron to distinguish between two different classes of digits (e.g., &quot;1&quot; vs &quot;7&quot;, &quot;0&quot; vs &quot;non-zero&quot;, etc.).</p>
+<h2>Notation and Diagram</h2>
+<p>Here is a diagram representing a single neuron (as we&#39;ll see later, some neural networks are just many of these neurons interconnected):</p>
+<p><img src="/img/NeuronSeparate.svg" alt="A neuron model with separate nodes for linear and activation computations."></p>
+<p>The diagram represents the following equations:</p>
+<p>\begin{align}
+z\i &amp;= \sum_{k=1}^{n_x} x_k\i w_k + b\
+a\i &amp;= g(z\i)
+\end{align}</p>
+<p>For these two equations:</p>
+<ul>
+<li>$x_k\i$ are the input features for the $i^{th}$ example</li>
+<li>$w_k$ (weights) and $b$ (bias) are the <strong>learned</strong> parameters</li>
+<li>$z\i$ is a weighted sum of the input features plus the additional bias term</li>
+<li>$a\i$ is the output of a non-linear activation function $g(\mathord{\cdot})$ applied to $z\i$</li>
+<li>$\yhat\i$ is the label we often give to the output ($a\i = \yhat\i$)</li>
+</ul>
+<details class="question">
+<summary><strong>Question:</strong> Why do $w_k$ and $b$ not have superscripts?</summary>
+<div class="answer">
+<strong>Answer:</strong> The parameters $w_k$ and $b$ do not change as the input $x_k\i$ changes. These parameters <strong>are</strong> the neuron, and they are used to produce the output $\yhat\i$ for any given input; we use the same parameter values regardless of input.
+</div>
+</details><p><strong>For this model, we want to find parameters $w_k$ and $b$ such that the neuron outputs $\yhat\i \approx y\i$ for any input.</strong></p>
+<p>Below is a more common representation of a neuron model, combining the linear and activation components:</p>
+<p><img src="/img/Neuron.svg" alt="A neuron model."></p>
+<h2>Neuron with Python Standard Libraries</h2>
+<p>Here is a simple python implementation of a neuron without optimization:</p>
+<pre><code class="language-python">from math import exp
+from random import gauss
+
+def sigmoid(z: float) -&gt; float:
+    &quot;&quot;&quot;The sigmoid/logistic activation function.&quot;&quot;&quot;
+    return 1 / (1 + exp(-z))
+
+N = 100
+nx = 4
+x1 = [gauss(0, 1) for _ in range(N)]
+x2 = [gauss(0, 1) for _ in range(N)]
+x3 = [gauss(0, 1) for _ in range(N)]
+x4 = [gauss(0, 1) for _ in range(N)]
+
+w1 = gauss(0, 1)
+w2 = gauss(0, 1)
+w3 = gauss(0, 1)
+w4 = gauss(0, 1)
+b = 0
+
+for x1i, x2i, x3i, x4i in zip(x1, x2, x3, x4):
+    zi = w1 * x1i + w2 * x2i + w3 * x3i + w4 * x4i + b
+    ai = sigmoid(zi)
+</code></pre>
+<p>In this code listing I use the <code>sigmoid</code> activation function. This function is plotted below.</p>
+<p><img src="/img/Sigmoid.png" alt="Sigmoid activation function and its derivative."></p>
+<p>Some nice properties of this function include:</p>
+<ul>
+<li>An output range of [0, 1] (all inputs are &quot;squashed&quot; into this range).</li>
+<li>An easy to compute derivative.</li>
+<li>Easy to interpret and understand.</li>
+</ul>
+<p>We often use sigmoid activation functions for binary classification (predicting whether an input belongs to one of two classes).</p>
+<details class="question">
+<summary><strong>Question:</strong> Can you think of any downsides for this function (hint: look at the derivative curve)?</summary>
+<div class="answer">
+<strong>Answer:</strong> While this function was once widely used, it can lead to slower learning due to small derivative values for inputs $z$ outside the range [-4, 4] (vanishing gradients). ReLU is more commonly used for hidden layers today.
+</div>
+</details><h2>The Dot-Product</h2>
+<p>We compute $z\i$ using a summation, but we can express this same bit of math using the dot-product from linear algebra:</p>
+<p>$$z\i = \sum_{k=1}^{n_x} x_k\i w_k + b = \vx^{(i)T} \vw + b$$</p>
+<p>Using PyTorch:</p>
+<pre><code class="language-python">import torch
+
+N = 100
+nx = 4
+X = torch.randn(N, nx)
+w = torch.randn(nx)
+b = 0
+
+for xi in X:
+    zi = xi @ w + b
+    ai = torch.sigmoid(zi)
+</code></pre>
+<h2>Vectorizing Inputs</h2>
+<p>In addition to using a dot-product, we can use matrix multiplication in place of looping over all examples in the dataset:</p>
+<p>\begin{align}
+\vz &amp;= X \vw + \mathbf{1} b \
+\va &amp;= g(\vz)
+\end{align&quot;&gt;</p>
+<pre><code class="language-python">import torch
+
+N = 100
+nx = 4
+X = torch.randn(N, nx)
+w = torch.randn(nx)
+b = 0
+
+z = X @ w + b
+yhat = torch.sigmoid(z)
+</code></pre>
+<details class="question">
+<summary><strong>Question:</strong> What are the dimensions of $\vz$ and $\va$ (aka $\vyhat$)?</summary>
+<div class="answer">
+<strong>Answer:</strong> We are computing a single output value for each input, so the shape of these vectors is $(N \times 1)$.
+</div>
+</details><h2>Optimization with Batch Gradient Descent</h2>
+<p>We must find values for parameters $\vw$ and $b$ to make $\yhat\i \approx y\i$. We use gradient descent to optimize parameters.</p>
+<p>The standard choice when performing classification with a neuron is <strong>binary cross-entropy</strong> (BCE):</p>
+<p>\begin{align}
+ℒ(\vyhat, \vy) &amp;= -\frac{1}{N}\sum_{i=1}^N (y\i \log{\yhat\i} + (1 - y\i)\log{(1-\yhat\i)})\
+  &amp;= -\text{mean}_0\left(\vy \cdot \log{\vyhat} + (1 - \vy) \cdot \log{(1 - \vyhat)}\right)
+\end{align}</p>
+<p><img src="/img/LossLandscape.svg" alt="The effect on loss ℒ of adjusting parameter w_k."></p>
+<p>Using the chain rule, partial derivatives with respect to parameters are:</p>
+<p>\begin{align}
+\frac{∂ ℒ}{∂ \vw} &amp;= \frac{1}{N} X^T (\vyhat - \vy)\[10pt]
+\frac{∂ ℒ}{∂ b} &amp;= \frac{1}{N} \sum_{i=1}^N (\yhat\i - y\i)
+\end{align}</p>
+<p>Parameter updates:</p>
+<p>\begin{align}
+\vw &amp;:= \vw - η \frac{∂ ℒ}{∂ \vw} \
+b &amp;:= b - η \frac{∂ ℒ}{∂ b}
+\end{align}</p>
+<h2>Neuron Batch Gradient Descent Code</h2>
+<p>Here is a complete example training a neuron to classify images as digit 1 or digit 7:</p>
+<pre><code class="language-python">import torch
+
+# Neuron parameters
+nx = 28 * 28
+w = torch.randn(nx) * 0.01
+b = torch.zeros(1)
+
+num_epochs = 4
+learning_rate = 0.01
+
+# Training loop
+for epoch in range(num_epochs):
+    # Forward pass
+    yhat = torch.sigmoid(train_X @ w + b)
+    losses = -(train_y * torch.log(yhat) + (1 - train_y) * torch.log(1 - yhat))
+
+    # Backward pass (gradients)
+    dz = yhat - train_y
+    dw = (1 / train_y.shape[0]) * (dz @ train_X)
+    db = dz.mean()
+
+    # Update parameters
+    w -= learning_rate * dw
+    b -= learning_rate * db
+</code></pre>
+
+      <nav class="chapter-nav">
+        <a href="/03-data.html" class="nav-prev">&larr; Previous: 3. Data</a>
+        <a href="/05-neural-networks-and-backpropagation.html" class="nav-next">Next: 5. Neural Networks and Backpropagation &rarr;</a>
+      </nav>
+    
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <p>&copy; 2026 Anthony J. Clark. All rights reserved.</p>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

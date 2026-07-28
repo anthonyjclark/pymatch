@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="PyMatch - 7. Optimization Techniques" />
+    <title>PyMatch - 7. Optimization Techniques</title>
+  </head>
+
+  <body>
+    <header class="site-header">
+      <div class="header-container">
+        <h1><a href="/index.html" style="color: inherit; text-decoration: none;">PyMatch Documentation</a></h1>
+        <nav class="site-nav">
+          <a href="/index.html" class="">Home</a>
+          <a href="/guide.html" class="">Guide</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="content-container">
+      <div class="math-defs" style="display: none">
+        \[ \def\i{{^{(i)}}} \def\vx{{\mathbf{x}}} \def\vy{{\mathbf{y}}} \def\vw{{\mathbf{w}}}
+        \def\vb{{\mathbf{b}}} \def\vz{{\mathbf{z}}} \def\va{{\mathbf{a}}} \def\yhat{{\hat y}}
+        \def\vyhat{{\mathbf{\hat y}}} \def\mae{{||\vyhat - \vy||_1}} \def\vhmse{{\frac{1}{2N} ||(\vyhat
+        - \vy)^2||_1}} \def\vbce{{-\frac{1}{N}\sum_{i=1}^N (y\i \log{\yhat\i} + (1 - y\i)\log{(1-\yhat\i)})}} \]
+      </div>
+
+      <article class="doc-article">
+        <h1>7. Optimization Techniques</h1>
+<h2>Momentum</h2>
+<p>Accelerating gradient descent using momentum vectors.</p>
+<h3>Nesterov&#39;s Accelerated Gradients</h3>
+<p>Nesterov momentum looks ahead at the future parameter position before computing gradients.</p>
+<h2>RMSProp</h2>
+<p>Root Mean Square Propagation scales learning rates by a running average of uncentered squared gradients.</p>
+<h2>Adam</h2>
+<p>Adaptive Moment Estimation combines momentum and RMSProp for adaptive per-parameter learning rates.</p>
+<h2>AMSGrad</h2>
+<p>Variant of Adam ensuring non-increasing effective step sizes.</p>
+
+      <nav class="chapter-nav">
+        <a href="/06-gradient-descent.html" class="nav-prev">&larr; Previous: 6. Gradient Descent</a>
+        <a href="/08-overfitting-and-generalization.html" class="nav-next">Next: 8. Overfitting and Generalization &rarr;</a>
+      </nav>
+    
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <p>&copy; 2026 Anthony J. Clark. All rights reserved.</p>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

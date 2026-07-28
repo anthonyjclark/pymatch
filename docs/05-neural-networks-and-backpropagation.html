@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="PyMatch - 5. Neural Networks and Backpropagation" />
+    <title>PyMatch - 5. Neural Networks and Backpropagation</title>
+  </head>
+
+  <body>
+    <header class="site-header">
+      <div class="header-container">
+        <h1><a href="/index.html" style="color: inherit; text-decoration: none;">PyMatch Documentation</a></h1>
+        <nav class="site-nav">
+          <a href="/index.html" class="">Home</a>
+          <a href="/guide.html" class="">Guide</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="content-container">
+      <div class="math-defs" style="display: none">
+        \[ \def\i{{^{(i)}}} \def\vx{{\mathbf{x}}} \def\vy{{\mathbf{y}}} \def\vw{{\mathbf{w}}}
+        \def\vb{{\mathbf{b}}} \def\vz{{\mathbf{z}}} \def\va{{\mathbf{a}}} \def\yhat{{\hat y}}
+        \def\vyhat{{\mathbf{\hat y}}} \def\mae{{||\vyhat - \vy||_1}} \def\vhmse{{\frac{1}{2N} ||(\vyhat
+        - \vy)^2||_1}} \def\vbce{{-\frac{1}{N}\sum_{i=1}^N (y\i \log{\yhat\i} + (1 - y\i)\log{(1-\yhat\i)})}} \]
+      </div>
+
+      <article class="doc-article">
+        <h1>5. Neural Networks and Backpropagation</h1>
+<blockquote>
+<p>Once your computer is pretending to be a neural net, you get it to be able to do a particular task by just showing it a whole lot of examples.</p>
+<p>— Geoffrey Hinton</p>
+</blockquote>
+<p>Below is our first neural network (aka multi-layer perceptron, MLP). We&#39;ll start by using this diagram to formulate terminology and conventions:</p>
+<p><img src="/img/2LayerNetwork.svg" alt="A two-layer neural network."></p>
+<p>Notation:</p>
+<ul>
+<li>Layer 0 is the input (we called this $X$ for a single Neuron)</li>
+<li>Square bracket superscripts denote the network layer</li>
+<li>Round parenthesis superscripts denote the example index</li>
+<li>$w$ parameter subscripts denote first the associated neuron in the current layer and second the associated neuron from the previous layer</li>
+<li>$b$, $z$, and $a$ subscripts denote an associated neuron</li>
+</ul>
+<details class="question">
+<summary><strong>Question:</strong> Given a hypothetical deep neural network, how would you denote the linear computation of the third neuron in the fifth layer for training example 6123?</summary>
+<div class="answer">
+<strong>Answer:</strong> $$z_3^{[5](6123)}$$
+<ul>
+  <li>"$z$": linear computation</li>
+  <li>"$[5]$" superscript: fifth layer</li>
+  <li>"$(6123)$" superscript: example 6123</li>
+  <li>"$3$" subscript: third neuron</li>
+</ul>
+</div>
+</details><h2>Vectorized Equations For a Neural Network</h2>
+<p>Parameters for any layer $l = 1, 2, \dots, L$:</p>
+<p>\begin{align}
+W^{[l]} &amp;= \begin{bmatrix} w^{[l]}<em>{1,1} &amp; \cdots &amp; w^{[l]}</em>{1,n_{l-1}} \ \vdots &amp; \ddots &amp; \vdots \ w^{[l]}<em>{n_l,1} &amp; \cdots &amp; w^{[l]}</em>{n_l,n_{l-1}} \end{bmatrix} \
+\vb^{[l]} &amp;= \begin{bmatrix} b^{[l]}<em>1 \ \vdots \ b^{[l]}</em>{n_l} \end{bmatrix}
+\end{align}</p>
+<p>Vectorized linear and activation equations for each layer across all examples:</p>
+<p>\begin{align}
+Z^{[l]} &amp;= A^{[l-1]} W^{[l]T} + \mathbf{1} \vb^{[l]T}\
+A^{[l]} &amp;= g^{[l]}(Z^{[l]})
+\end{align}</p>
+<details class="question">
+<summary><strong>Question:</strong> What is the shape of $Z^{[l]}$?</summary>
+<div class="answer">
+<strong>Answer:</strong> $Z^{[l]}$ is $(N \times n_l)$.
+</div>
+</details><details class="question">
+<summary><strong>Question:</strong> What is the shape of $A^{[l]}$?</summary>
+<div class="answer">
+<strong>Answer:</strong> $A^{[l]}$ is $(N \times n_l)$.
+</div>
+</details><h2>Backpropagation</h2>
+<p>Just like for the single neuron, we want to find values for $W^{[l]}$ and $\vb^{[l]}$ (for $l = 1, 2, \dots, L$) such that $A^{[L]} \approx Y$.</p>
+<p>This process of computing derivatives backward through the network is referred to as <strong>backpropagation</strong>. A compute graph depicts the flow of activations (forward pass) and gradients (backward pass):</p>
+<p><img src="/img/ComputeGraph.svg" alt="Compute graph for two-layer network."></p>
+<h3>Layer 2 Parameters</h3>
+<p>Partial derivatives for layer 2:</p>
+<p>\begin{align}
+\frac{∂ℒ}{∂ W^{[2]}} &amp;= \frac{1}{N} ∂_{Z^{[2]}}^T A^{[1]}\
+\frac{∂ ℒ}{∂ \vb^{[2]}} &amp;= \text{mean}<em>0 (∂</em>{\vz^{[2]}})
+\end{align}</p>
+<p>where $∂_{Z^{[2]}} = A^{[2]} - Y$.</p>
+<h3>Layer 1 Parameters</h3>
+<p>Partial derivatives for layer 1:</p>
+<p>\begin{align}
+\frac{∂ℒ}{∂ W^{[1]}} &amp;= \frac{1}{N} ∂_{Z^{[1]}}^T A^{[0]}\
+\frac{∂ ℒ}{∂ \vb^{[1]}} &amp;= \text{mean}<em>0 (∂</em>{\vz^{<a href="i">1</a>}})
+\end{align}</p>
+<p>where $∂<em>{Z^{[1]}} = ∂</em>{Z^{[2]}} W^{[2]} \cdot A^{[1]} \cdot (1 - A^{[1]})$.</p>
+<h3>Parameter Update Equations</h3>
+<p>\begin{align}
+W^{[1]} &amp;:= W^{[1]} - η \frac{∂ℒ}{∂ W^{[1]}} \
+\vb^{[1]} &amp;:= \vb^{[1]} - η \frac{∂ℒ}{∂ \vb^{[1]}} \
+W^{[2]} &amp;:= W^{[2]} - η \frac{∂ℒ}{∂ W^{[2]}} \
+\vb^{[2]} &amp;:= \vb^{[2]} - η \frac{∂ℒ}{∂ \vb^{[2]}}
+\end{align}</p>
+<h2>Two-Layer Neural Network Code</h2>
+<pre><code class="language-python">import torch
+
+n0 = 28 * 28
+n1 = 2
+n2 = 1
+
+W1 = torch.randn(n1, n0)
+b1 = torch.randn(n1)
+W2 = torch.randn(n2, n1)
+b2 = torch.randn(n2)
+
+def model(A0):
+    Z1 = A0 @ W1.T + b1
+    A1 = torch.sigmoid(Z1)
+    Z2 = A1 @ W2.T + b2
+    A2 = torch.sigmoid(Z2)
+    return Z1, A1, Z2, A2.squeeze()
+</code></pre>
+<h2>Automatic Differentiation</h2>
+<p>Instead of computing derivatives by hand, machine learning frameworks use <strong>automatic differentiation</strong>. An automatic differentiation library:</p>
+<ol>
+<li>Creates a compute graph from your tensor operations.</li>
+<li>Performs a topological sort on the compute graph.</li>
+<li>Computes gradients and backpropagates them to all matrices.</li>
+</ol>
+<pre><code class="language-python">import torch
+
+N, n0, n1, n2 = 20, 10, 7, 13
+
+A0 = torch.randn(N, n0)
+Y = torch.randn(N, n2)
+
+W1 = torch.randn(n1, n0, requires_grad=True)
+b1 = torch.randn(n1, requires_grad=True)
+Z1 = A0 @ W1.T + b1
+A1 = torch.sigmoid(Z1)
+
+W2 = torch.randn(n2, n1, requires_grad=True)
+b2 = torch.randn(n2, requires_grad=True)
+Z2 = A1 @ W2.T + b2
+A2 = torch.sigmoid(Z2)
+
+loss = ((A2 - Y) ** 2).mean()
+loss.backward()
+
+print(&quot;W1 gradient:&quot;, W1.grad.shape)
+print(&quot;W2 gradient:&quot;, W2.grad.shape)
+</code></pre>
+<p><img src="/img/AutoDiffComputeGraph.svg" alt="Compute graph for two-layer network."></p>
+
+      <nav class="chapter-nav">
+        <a href="/04-single-neuron.html" class="nav-prev">&larr; Previous: 4. Single Neuron</a>
+        <a href="/06-gradient-descent.html" class="nav-next">Next: 6. Gradient Descent &rarr;</a>
+      </nav>
+    
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <p>&copy; 2026 Anthony J. Clark. All rights reserved.</p>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="PyMatch - 6. Gradient Descent" />
+    <title>PyMatch - 6. Gradient Descent</title>
+  </head>
+
+  <body>
+    <header class="site-header">
+      <div class="header-container">
+        <h1><a href="/index.html" style="color: inherit; text-decoration: none;">PyMatch Documentation</a></h1>
+        <nav class="site-nav">
+          <a href="/index.html" class="">Home</a>
+          <a href="/guide.html" class="">Guide</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="content-container">
+      <div class="math-defs" style="display: none">
+        \[ \def\i{{^{(i)}}} \def\vx{{\mathbf{x}}} \def\vy{{\mathbf{y}}} \def\vw{{\mathbf{w}}}
+        \def\vb{{\mathbf{b}}} \def\vz{{\mathbf{z}}} \def\va{{\mathbf{a}}} \def\yhat{{\hat y}}
+        \def\vyhat{{\mathbf{\hat y}}} \def\mae{{||\vyhat - \vy||_1}} \def\vhmse{{\frac{1}{2N} ||(\vyhat
+        - \vy)^2||_1}} \def\vbce{{-\frac{1}{N}\sum_{i=1}^N (y\i \log{\yhat\i} + (1 - y\i)\log{(1-\yhat\i)})}} \]
+      </div>
+
+      <article class="doc-article">
+        <h1>6. Gradient Descent</h1>
+<p>Optimizing a neural network follows this process:</p>
+<ol>
+<li>Prepare dataset(s) (e.g., training, validation, evaluation).</li>
+<li>Set hyperparameters (e.g., learning rate, number of epochs).</li>
+<li>Create the model.</li>
+<li>Train the model.</li>
+</ol>
+<p>We&#39;ll go into more details starting with training the model.</p>
+<h2>Batch Gradient Descent</h2>
+<p>All examples thus far have used batch gradient descent (BGD). All gradient descent methods are iterative, meaning we continually make small changes to the parameters until we are satisfied or run out of time. BGD looks something like this:</p>
+<pre><code class="language-text">for each epoch
+    1. compute gradient with respect to all examples
+    2. average gradients across all examples
+    3. update parameters using averaged gradients
+</code></pre>
+<p>In batch gradient descent, we compute all gradients at once and average them across all examples, resulting in the parameters being updated a single time each epoch. This has the advantage of smoothing out the effect of any outliers and leveraging parallel computation.</p>
+<h2>Stochastic Gradient Descent</h2>
+<p>In stochastic Gradient Descent (SGD) we update parameters $N$ times per epoch—once per example.</p>
+<p>The <strong>stochastic</strong> part of SGD refers to a random shuffling of the examples each epoch.</p>
+<pre><code class="language-text">for each epoch
+    randomly shuffle all examples
+    for each example
+        1. compute gradient with respect to single example
+        2. update parameters using gradient
+</code></pre>
+<p>Although we update the parameters more frequently, not all updates are good since outliers will make the model perform worse in the general case.</p>
+<h2>Mini-Batch Stochastic Gradient Descent</h2>
+<p>Mini-Batch SGD provides a middle ground. We chunk the input into some number of batches and take the average gradient over each batch.</p>
+<pre><code class="language-text">for each epoch
+    randomly distribute examples into batches
+    for each batch
+        1. compute gradient with respect to all examples in batch
+        2. average gradients across all examples in batch
+        3. update parameters using averaged gradients
+</code></pre>
+<p>This enables us to get the best of both worlds:</p>
+<ul>
+<li>less susceptible to outliers and noise,</li>
+<li>a good number of updates per epoch, and</li>
+<li>good utilization of computing resources.</li>
+</ul>
+<details class="question">
+<summary><strong>Question:</strong> What batch size turns Mini-Batch SGD into BGD? What batch size turns Mini-Batch SGD into SGD?</summary>
+<div class="answer">
+<strong>Answer:</strong> $N$ and $1$, respectively.
+</div>
+</details><details class="question">
+<summary><strong>Question:</strong> Will all batches be the same size?</summary>
+<div class="answer">
+<strong>Answer:</strong> No. The last batch is frequently smaller than all other batches. It contains the leftovers.
+</div>
+</details>
+
+      <nav class="chapter-nav">
+        <a href="/05-neural-networks-and-backpropagation.html" class="nav-prev">&larr; Previous: 5. Neural Networks and Backpropagation</a>
+        <a href="/07-optimization-techniques.html" class="nav-next">Next: 7. Optimization Techniques &rarr;</a>
+      </nav>
+    
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <p>&copy; 2026 Anthony J. Clark. All rights reserved.</p>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
