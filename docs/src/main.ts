@@ -2,7 +2,7 @@ import "./style.css";
 import { loadPyodide } from "pyodide";
 
 // Configure and initialize MathJax npm dependency
-window.MathJax = {
+window.MathJax = window.MathJax || {
   tex: {
     inlineMath: [
       ["$", "$"],
@@ -12,9 +12,15 @@ window.MathJax = {
       ["$$", "$$"],
       ["\\[", "\\]"],
     ],
+    processEscapes: true,
   },
 };
+
 import "mathjax/es5/tex-mml-chtml.js";
+
+if (window.MathJax && typeof window.MathJax.typesetPromise === "function") {
+  window.MathJax.typesetPromise();
+}
 
 const codeInput = document.getElementById("code-input") as HTMLTextAreaElement | null;
 const runBtn = document.getElementById("run-btn") as HTMLButtonElement | null;

@@ -85,6 +85,19 @@ body {
   box-shadow: var(--shadow);
 }
 
+/* MathJax Centering & Spacing */
+mjx-container[display="true"] {
+  display: block !important;
+  text-align: center !important;
+  margin: 1.5rem auto !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+mjx-container[display="true"] > mjx-math {
+  margin: 0 auto !important;
+}
+
 section {
   margin-bottom: 3rem;
 }

@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="PyMatch - 9. Convolutional Neural Networks" />
     <title>PyMatch - 9. Convolutional Neural Networks</title>
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']],
+          processEscapes: true
+        },
+        options: {
+          ignoreHtmlClass: 'tex2jax_ignore',
+          processHtmlClass: 'tex2jax_process'
+        }
+      };
+    </script>
   </head>
 
   <body>
@@ -20,10 +33,20 @@
 
     <main class="content-container">
       <div class="math-defs" style="display: none">
-        \[ \def\i{{^{(i)}}} \def\vx{{\mathbf{x}}} \def\vy{{\mathbf{y}}} \def\vw{{\mathbf{w}}}
-        \def\vb{{\mathbf{b}}} \def\vz{{\mathbf{z}}} \def\va{{\mathbf{a}}} \def\yhat{{\hat y}}
-        \def\vyhat{{\mathbf{\hat y}}} \def\mae{{||\vyhat - \vy||_1}} \def\vhmse{{\frac{1}{2N} ||(\vyhat
-        - \vy)^2||_1}} \def\vbce{{-\frac{1}{N}\sum_{i=1}^N (y\i \log{\yhat\i} + (1 - y\i)\log{(1-\yhat\i)})}} \]
+        \[
+          \def\i{{^{(i)}}}
+          \def\vx{{\mathbf{x}}}
+          \def\vy{{\mathbf{y}}}
+          \def\vw{{\mathbf{w}}}
+          \def\vb{{\mathbf{b}}}
+          \def\vz{{\mathbf{z}}}
+          \def\va{{\mathbf{a}}}
+          \def\yhat{{\hat y}}
+          \def\vyhat{{\mathbf{\hat y}}}
+          \def\mae{{||\vyhat - \vy||_1}}
+          \def\vhmse{{\frac{1}{2N} ||(\vyhat - \vy)^2||_1}}
+          \def\vbce{{-\frac{1}{N}\sum_{i=1}^N (y\i \log{\yhat\i} + (1 - y\i)\log{(1-\yhat\i)})}}
+        \]
       </div>
 
       <article class="doc-article">

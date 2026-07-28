@@ -14,27 +14,29 @@ Here is a diagram representing a single neuron (as we'll see later, some neural 
 
 The diagram represents the following equations:
 
+$$
 \begin{align}
-z\i &= \sum_{k=1}^{n_x} x_k\i w_k + b\\
-a\i &= g(z\i)
+z^{(i)} &= \sum_{k=1}^{n_x} x_k^{(i)} w_k + b\\
+a^{(i)} &= g(z^{(i)})
 \end{align}
+$$
 
 For these two equations:
 
-- $x_k\i$ are the input features for the $i^{th}$ example
+- $x_k^{(i)}$ are the input features for the $i^{th}$ example
 - $w_k$ (weights) and $b$ (bias) are the **learned** parameters
-- $z\i$ is a weighted sum of the input features plus the additional bias term
-- $a\i$ is the output of a non-linear activation function $g(\mathord{\cdot})$ applied to $z\i$
-- $\yhat\i$ is the label we often give to the output ($a\i = \yhat\i$)
+- $z^{(i)}$ is a weighted sum of the input features plus the additional bias term
+- $a^{(i)}$ is the output of a non-linear activation function $g(\mathord{\cdot})$ applied to $z^{(i)}$
+- $\yhat^{(i)}$ is the label we often give to the output ($a^{(i)} = \yhat^{(i)}$)
 
 <details class="question">
 <summary><strong>Question:</strong> Why do $w_k$ and $b$ not have superscripts?</summary>
 <div class="answer">
-<strong>Answer:</strong> The parameters $w_k$ and $b$ do not change as the input $x_k\i$ changes. These parameters <strong>are</strong> the neuron, and they are used to produce the output $\yhat\i$ for any given input; we use the same parameter values regardless of input.
+<strong>Answer:</strong> The parameters $w_k$ and $b$ do not change as the input $x_k^{(i)}$ changes. These parameters <strong>are</strong> the neuron, and they are used to produce the output $\yhat^{(i)}$ for any given input; we use the same parameter values regardless of input.
 </div>
 </details>
 
-**For this model, we want to find parameters $w_k$ and $b$ such that the neuron outputs $\yhat\i \approx y\i$ for any input.**
+**For this model, we want to find parameters $w_k$ and $b$ such that the neuron outputs $\yhat^{(i)} \approx y^{(i)}$ for any input.**
 
 Below is a more common representation of a neuron model, combining the linear and activation components:
 
@@ -91,9 +93,11 @@ We often use sigmoid activation functions for binary classification (predicting 
 
 ## The Dot-Product
 
-We compute $z\i$ using a summation, but we can express this same bit of math using the dot-product from linear algebra:
+We compute $z^{(i)}$ using a summation, but we can express this same bit of math using the dot-product from linear algebra:
 
-$$z\i = \sum_{k=1}^{n_x} x_k\i w_k + b = \vx^{(i)T} \vw + b$$
+$$
+z^{(i)} = \sum_{k=1}^{n_x} x_k^{(i)} w_k + b = \vx^{(i)T} \vw + b
+$$
 
 Using PyTorch:
 
@@ -115,10 +119,12 @@ for xi in X:
 
 In addition to using a dot-product, we can use matrix multiplication in place of looping over all examples in the dataset:
 
+$$
 \begin{align}
 \vz &= X \vw + \mathbf{1} b \\
 \va &= g(\vz)
-\end{align">
+\end{align}
+$$
 
 ```python
 import torch
@@ -142,30 +148,36 @@ yhat = torch.sigmoid(z)
 
 ## Optimization with Batch Gradient Descent
 
-We must find values for parameters $\vw$ and $b$ to make $\yhat\i \approx y\i$. We use gradient descent to optimize parameters.
+We must find values for parameters $\vw$ and $b$ to make $\yhat^{(i)} \approx y^{(i)}$. We use gradient descent to optimize parameters.
 
 The standard choice when performing classification with a neuron is **binary cross-entropy** (BCE):
 
+$$
 \begin{align}
-ℒ(\vyhat, \vy) &= -\frac{1}{N}\sum_{i=1}^N (y\i \log{\yhat\i} + (1 - y\i)\log{(1-\yhat\i)})\\
+ℒ(\vyhat, \vy) &= -\frac{1}{N}\sum_{i=1}^N (y^{(i)} \log{\yhat^{(i)}} + (1 - y^{(i)})\log{(1-\yhat^{(i)})})\\
   &= -\text{mean}_0\left(\vy \cdot \log{\vyhat} + (1 - \vy) \cdot \log{(1 - \vyhat)}\right)
 \end{align}
+$$
 
 ![The effect on loss ℒ of adjusting parameter w_k.](/img/LossLandscape.svg)
 
 Using the chain rule, partial derivatives with respect to parameters are:
 
+$$
 \begin{align}
 \frac{∂ ℒ}{∂ \vw} &= \frac{1}{N} X^T (\vyhat - \vy)\\[10pt]
-\frac{∂ ℒ}{∂ b} &= \frac{1}{N} \sum_{i=1}^N (\yhat\i - y\i)
+\frac{∂ ℒ}{∂ b} &= \frac{1}{N} \sum_{i=1}^N (\yhat^{(i)} - y^{(i)})
 \end{align}
+$$
 
 Parameter updates:
 
+$$
 \begin{align}
 \vw &:= \vw - η \frac{∂ ℒ}{∂ \vw} \\
 b &:= b - η \frac{∂ ℒ}{∂ b}
 \end{align}
+$$
 
 ## Neuron Batch Gradient Descent Code
 

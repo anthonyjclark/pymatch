@@ -13,6 +13,30 @@ if (!fs.existsSync(contentDir)) {
   fs.mkdirSync(contentDir, { recursive: true });
 }
 
+// Protect math expressions from marked parser mangling while letting marked parse code blocks safely
+function protectMath(mdText) {
+  const mathBlocks = [];
+  // Regex matches display math ($$...$$ or \[...\]) and inline math ($...$ or \(...\))
+  const regex = /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\(.*?\\\)|(?<!\\)\$[^\$\n]+?(?<!\\)\$)/g;
+
+  const protectedText = mdText.replace(regex, (match) => {
+    const placeholder = `MATHBLOCKTOKEN${mathBlocks.length}ENDTOKEN`;
+    mathBlocks.push(match);
+    return placeholder;
+  });
+
+  return { protectedText, mathBlocks };
+}
+
+function restoreMath(htmlText, mathBlocks) {
+  let restored = htmlText;
+  for (let i = 0; i < mathBlocks.length; i++) {
+    const placeholder = `MATHBLOCKTOKEN${i}ENDTOKEN`;
+    restored = restored.replace(placeholder, mathBlocks[i]);
+  }
+  return restored;
+}
+
 const template = (title, contentHtml, filename) => `<!doctype html>
 <html lang="en">
   <head>
@@ -20,6 +44,19 @@ const template = (title, contentHtml, filename) => `<!doctype html>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="PyMatch - ${title}" />
     <title>PyMatch - ${title}</title>
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
+          displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']],
+          processEscapes: true
+        },
+        options: {
+          ignoreHtmlClass: 'tex2jax_ignore',
+          processHtmlClass: 'tex2jax_process'
+        }
+      };
+    </script>
   </head>
 
   <body>
@@ -35,10 +72,20 @@ const template = (title, contentHtml, filename) => `<!doctype html>
 
     <main class="content-container">
       <div class="math-defs" style="display: none">
-        \\[ \\def\\i{{^{(i)}}} \\def\\vx{{\\mathbf{x}}} \\def\\vy{{\\mathbf{y}}} \\def\\vw{{\\mathbf{w}}}
-        \\def\\vb{{\\mathbf{b}}} \\def\\vz{{\\mathbf{z}}} \\def\\va{{\\mathbf{a}}} \\def\\yhat{{\\hat y}}
-        \\def\\vyhat{{\\mathbf{\\hat y}}} \\def\\mae{{||\\vyhat - \\vy||_1}} \\def\\vhmse{{\\frac{1}{2N} ||(\\vyhat
-        - \\vy)^2||_1}} \\def\\vbce{{-\\frac{1}{N}\\sum_{i=1}^N (y\\i \\log{\\yhat\\i} + (1 - y\\i)\\log{(1-\\yhat\\i)})}} \\]
+        \\[
+          \\def\\i{{^{(i)}}}
+          \\def\\vx{{\\mathbf{x}}}
+          \\def\\vy{{\\mathbf{y}}}
+          \\def\\vw{{\\mathbf{w}}}
+          \\def\\vb{{\\mathbf{b}}}
+          \\def\\vz{{\\mathbf{z}}}
+          \\def\\va{{\\mathbf{a}}}
+          \\def\\yhat{{\\hat y}}
+          \\def\\vyhat{{\\mathbf{\\hat y}}}
+          \\def\\mae{{||\\vyhat - \\vy||_1}}
+          \\def\\vhmse{{\\frac{1}{2N} ||(\\vyhat - \\vy)^2||_1}}
+          \\def\\vbce{{-\\frac{1}{N}\\sum_{i=1}^N (y\\i \\log{\\yhat\\i} + (1 - y\\i)\\log{(1-\\yhat\\i)})}}
+        \\]
       </div>
 
       <article class="doc-article">
@@ -112,7 +159,10 @@ for (let i = 0; i < chapters.length; i++) {
   const needsRebuild = !htmlExists || ch.mtimeMs > htmlMtime || scriptMtime > htmlMtime;
 
   if (needsRebuild) {
-    let htmlBody = marked.parse(ch.mdContent);
+    // Protect math expressions from marked parser mangling
+    const { protectedText, mathBlocks } = protectMath(ch.mdContent);
+    let parsedHtml = marked.parse(protectedText);
+    let htmlBody = restoreMath(parsedHtml, mathBlocks);
 
     // Append Previous / Next chapter navigation
     const navHtml = `

@@ -6,6 +6,7 @@ interface Window {
     tex?: {
       inlineMath?: string[][];
       displayMath?: string[][];
+      processEscapes?: boolean;
     };
     typesetPromise?: () => Promise<void>;
   };

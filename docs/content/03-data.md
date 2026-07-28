@@ -6,21 +6,27 @@
 
 Perhaps the most important aspect of a neural network is the dataset. Let
 
-$$\mathcal{D} = \{X, Y\}$$
+$$
+\mathcal{D} = \{X, Y\}
+$$
 
 denote a dataset comprising input *features* $X$ and output *targets* $Y$. Although $X$ and $Y$ can come in many shapes, I am going to be opinionated here and use a specific (and consistent) convention. Let's use $N$ to denote the size of the paired dataset. (Note, not all problems have output targets, but herein I am talking about supervised learning unless otherwise specified.)
 
 We will frequently take a dataset and split it into examples used for training, validation, and evaluation. We'll discuss these terms near the end of this section.
 
-$X$ is a matrix (indicated by capitalization) containing all features of all input examples. A single input example $\vx\i$ is often represented as a *column* vector (indicated by boldface):
+$X$ is a matrix (indicated by capitalization) containing all features of all input examples. A single input example $\vx^{(i)}$ is often represented as a *column* vector (indicated by boldface):
 
-$$\vx\i = \begin{bmatrix} x\i_{1} \\ \vdots \\ x\i_{n_x} \end{bmatrix}$$
+$$
+\vx^{(i)} = \begin{bmatrix} x^{(i)}_{1} \\ x^{(i)}_{2} \\ \vdots \\ x^{(i)}_{n_x} \end{bmatrix}
+$$
 
 where subscripts denote the feature index, $n_x$ is the number of features, and the superscript $i$ denotes that this is the $i^{\mathit{th}}$ training example. We do not always put the input features into a column vector, but it is fairly standard.
 
 Each row in $X$ is a single input example (also referred to as an instance or sample), and when you stack all $N$ examples on top of each other (first transposing them into row vectors), you end up with:
 
-$$X = \begin{bmatrix} \text{--- } \vx^{(1)T} \text{ ---} \\ \vdots \\ \text{--- } \vx^{(N)T} \text{ ---} \end{bmatrix} = \begin{bmatrix} x^{(1)}_{1} & \cdots & x^{(1)}_{n_x} \\ \vdots & \ddots & \vdots \\ x^{(N)}_{1} & \cdots & x^{(N)}_{n_x} \end{bmatrix}$$
+$$
+X = \begin{bmatrix} \text{--- } \vx^{(1)T} \text{ ---} \\ \text{--- } \vx^{(2)T} \text{ ---} \\ \vdots \\ \text{--- } \vx^{(N)T} \text{ ---} \end{bmatrix} = \begin{bmatrix} x^{(1)}_{1} & x^{(1)}_{2} & \cdots & x^{(1)}_{n_x} \\ x^{(2)}_{1} & x^{(2)}_{2} & \cdots & x^{(2)}_{n_x} \\ \vdots & \vdots & \ddots & \vdots \\ x^{(N)}_{1} & x^{(N)}_{2} & \cdots & x^{(N)}_{n_x} \end{bmatrix}
+$$
 
 We transpose each example column vector (i.e., $\vx^{(i)T}$) into a row vector so that the first dimension of $X$ corresponds to the number of examples $N$ and the second dimension is the number of features $n_x$. Compare the column vector above to each row in the matrix.
 
@@ -29,17 +35,21 @@ Let's denote matrix dimensions with $(r \times c)$ (the number of rows $r$ by th
 <details class="question">
 <summary><strong>Question:</strong> What is the shape of $X$?</summary>
 <div class="answer">
-<strong>Answer:</strong> We say that $\vx\i \in \mathcal{R}^{n_x}$ (each input example is $n_x$ real values) and $X \in \mathcal{R}^{N \times n_x}$. Therefore, the shape of $X$ is $(N \times n_x)$.
+<strong>Answer:</strong> We say that $\vx^{(i)} \in \mathcal{R}^{n_x}$ (each input example is $n_x$ real values) and $X \in \mathcal{R}^{N \times n_x}$. Therefore, the shape of $X$ is $(N \times n_x)$.
 </div>
 </details>
 
 $Y$ contains the targets (also referred to as labels or the true/correct/actual/expected output values). Here is a single target column vector:
 
-$$\vy\i = \begin{bmatrix} y\i_{1} \\ \vdots \\ y\i_{n_y} \end{bmatrix}$$
+$$
+\vy^{(i)} = \begin{bmatrix} y^{(i)}_{1} \\ y^{(i)}_{2} \\ \vdots \\ y^{(i)}_{n_y} \end{bmatrix}
+$$
 
 And here is the entire target matrix including all examples:
 
-$$Y = \begin{bmatrix} \text{--- } \vy^{(1)T} \text{ ---} \\ \vdots \\ \text{--- } \vy^{(N)T} \text{ ---} \end{bmatrix} = \begin{bmatrix} y^{(1)}_{1} & \cdots & y^{(1)}_{n_y} \\ \vdots & \ddots & \vdots \\ y^{(N)}_{1} & \cdots & y^{(N)}_{n_y} \end{bmatrix}$$
+$$
+Y = \begin{bmatrix} \text{--- } \vy^{(1)T} \text{ ---} \\ \text{--- } \vy^{(2)T} \text{ ---} \\ \vdots \\ \text{--- } \vy^{(N)T} \text{ ---} \end{bmatrix} = \begin{bmatrix} y^{(1)}_{1} & y^{(1)}_{2} & \cdots & y^{(1)}_{n_y} \\ y^{(2)}_{1} & y^{(2)}_{2} & \cdots & y^{(2)}_{n_y} \\ \vdots & \vdots & \ddots & \vdots \\ y^{(N)}_{1} & y^{(N)}_{2} & \cdots & y^{(N)}_{n_y} \end{bmatrix}
+$$
 
 <details class="question">
 <summary><strong>Question:</strong> What is the shape of $Y$?</summary>
@@ -56,7 +66,9 @@ Let's use the [MNIST dataset](https://en.wikipedia.org/wiki/MNIST_database) as a
 <summary><strong>Question:</strong> What is the shape of the training partition of the input $X_{train}$?</summary>
 <div class="answer">
 <strong>Answer:</strong> $X_{train}$ is $(60000 \times 784)$:
-$$X = \begin{bmatrix} x^{(1)}_{1} & \cdots & x^{(1)}_{784} \\ \vdots & \ddots & \vdots \\ x^{(60000)}_{1} & \cdots & x^{(60000)}_{784} \end{bmatrix}$$
+$$
+X = \begin{bmatrix} x^{(1)}_{1} & x^{(1)}_{2} & \cdots & x^{(1)}_{784} \\ x^{(2)}_{1} & x^{(2)}_{2} & \cdots & x^{(2)}_{784} \\ \vdots & \vdots & \ddots & \vdots \\ x^{(60000)}_{1} & x^{(60000)}_{2} & \cdots & x^{(60000)}_{784} \end{bmatrix}
+$$
 The first row includes all 784 pixels of the first training image, and subsequent rows likewise contain pixel data for a single image.
 </div>
 </details>
@@ -65,9 +77,13 @@ The first row includes all 784 pixels of the first training image, and subsequen
 <summary><strong>Question:</strong> What is the shape of the training partition of the targets $Y_{train}$?</summary>
 <div class="answer">
 <strong>Answer:</strong> $Y_{train}$ is $(60000 \times 10)$:
-$$Y = \begin{bmatrix} y^{(1)}_{1} & \cdots & y^{(1)}_{10} \\ \vdots & \ddots & \vdots \\ y^{(60000)}_{1} & \cdots & y^{(60000)}_{10} \end{bmatrix}$$
+$$
+Y = \begin{bmatrix} y^{(1)}_{1} & y^{(1)}_{2} & \cdots & y^{(1)}_{10} \\ y^{(2)}_{1} & y^{(2)}_{2} & \cdots & y^{(2)}_{10} \\ \vdots & \vdots & \ddots & \vdots \\ y^{(60000)}_{1} & y^{(60000)}_{2} & \cdots & y^{(60000)}_{10} \end{bmatrix}
+$$
 Each row in this matrix is one-hot encoded, meaning that only one item in each row is "1" and all other items in a row are "0". Here is an example of a one-hot encoding target for an input image representing the digit "2":
-$$y^T = \begin{bmatrix} 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0\end{bmatrix}$$
+$$
+y^T = \begin{bmatrix} 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0\end{bmatrix}
+$$
 For efficiency's sake, we often represent a one-hot encoded vector using just the index of the "hot" item. For example, the previous vector can be represented by the integer 2.
 </div>
 </details>

@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="PyMatch - 5. Neural Networks and Backpropagation" />
     <title>PyMatch - 5. Neural Networks and Backpropagation</title>
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']],
+          processEscapes: true
+        },
+        options: {
+          ignoreHtmlClass: 'tex2jax_ignore',
+          processHtmlClass: 'tex2jax_process'
+        }
+      };
+    </script>
   </head>
 
   <body>
@@ -20,10 +33,20 @@
 
     <main class="content-container">
       <div class="math-defs" style="display: none">
-        \[ \def\i{{^{(i)}}} \def\vx{{\mathbf{x}}} \def\vy{{\mathbf{y}}} \def\vw{{\mathbf{w}}}
-        \def\vb{{\mathbf{b}}} \def\vz{{\mathbf{z}}} \def\va{{\mathbf{a}}} \def\yhat{{\hat y}}
-        \def\vyhat{{\mathbf{\hat y}}} \def\mae{{||\vyhat - \vy||_1}} \def\vhmse{{\frac{1}{2N} ||(\vyhat
-        - \vy)^2||_1}} \def\vbce{{-\frac{1}{N}\sum_{i=1}^N (y\i \log{\yhat\i} + (1 - y\i)\log{(1-\yhat\i)})}} \]
+        \[
+          \def\i{{^{(i)}}}
+          \def\vx{{\mathbf{x}}}
+          \def\vy{{\mathbf{y}}}
+          \def\vw{{\mathbf{w}}}
+          \def\vb{{\mathbf{b}}}
+          \def\vz{{\mathbf{z}}}
+          \def\va{{\mathbf{a}}}
+          \def\yhat{{\hat y}}
+          \def\vyhat{{\mathbf{\hat y}}}
+          \def\mae{{||\vyhat - \vy||_1}}
+          \def\vhmse{{\frac{1}{2N} ||(\vyhat - \vy)^2||_1}}
+          \def\vbce{{-\frac{1}{N}\sum_{i=1}^N (y\i \log{\yhat\i} + (1 - y\i)\log{(1-\yhat\i)})}}
+        \]
       </div>
 
       <article class="doc-article">
@@ -45,7 +68,7 @@
 <details class="question">
 <summary><strong>Question:</strong> Given a hypothetical deep neural network, how would you denote the linear computation of the third neuron in the fifth layer for training example 6123?</summary>
 <div class="answer">
-<strong>Answer:</strong> $$z_3^{[5](6123)}$$
+<strong>Answer:</strong> $z_3^{[5](6123)}$
 <ul>
   <li>"$z$": linear computation</li>
   <li>"$[5]$" superscript: fifth layer</li>
@@ -91,7 +114,7 @@ A^{[l]} &amp;= g^{[l]}(Z^{[l]})
 \frac{∂ℒ}{∂ W^{[1]}} &amp;= \frac{1}{N} ∂_{Z^{[1]}}^T A^{[0]}\
 \frac{∂ ℒ}{∂ \vb^{[1]}} &amp;= \text{mean}<em>0 (∂</em>{\vz^{<a href="i">1</a>}})
 \end{align}</p>
-<p>where $∂<em>{Z^{[1]}} = ∂</em>{Z^{[2]}} W^{[2]} \cdot A^{[1]} \cdot (1 - A^{[1]})$.</p>
+<p>where $∂_{Z^{[1]}} = ∂_{Z^{[2]}} W^{[2]} \cdot A^{[1]} \cdot (1 - A^{[1]})$.</p>
 <h3>Parameter Update Equations</h3>
 <p>\begin{align}
 W^{[1]} &amp;:= W^{[1]} - η \frac{∂ℒ}{∂ W^{[1]}} \
