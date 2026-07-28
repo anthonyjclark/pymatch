@@ -55,21 +55,33 @@ const template = (title, contentHtml, filename) => `<!doctype html>
 </html>
 `;
 
+const scriptMtime = fs.statSync(__filename).mtimeMs;
 const mdFiles = fs.readdirSync(contentDir).filter((file) => file.endsWith(".md"));
 
 for (const file of mdFiles) {
   const filePath = path.join(contentDir, file);
-  const mdContent = fs.readFileSync(filePath, "utf-8");
-
-  // Extract title from first H1 heading if present
-  const titleMatch = mdContent.match(/^#\s+(.+)$/m);
-  const title = titleMatch ? titleMatch[1].trim() : path.basename(file, ".md");
-
-  const htmlBody = marked.parse(mdContent);
   const outFileName = file.replace(/\.md$/, ".html");
   const outFilePath = path.join(rootDir, outFileName);
 
-  const fullHtml = template(title, htmlBody, outFileName);
-  fs.writeFileSync(outFilePath, fullHtml, "utf-8");
-  console.log(`Generated ${outFileName} from ${file}`);
+  const mdMtime = fs.statSync(filePath).mtimeMs;
+  const htmlExists = fs.existsSync(outFilePath);
+  const htmlMtime = htmlExists ? fs.statSync(outFilePath).mtimeMs : 0;
+
+  const needsRebuild = !htmlExists || mdMtime > htmlMtime || scriptMtime > htmlMtime;
+
+  if (needsRebuild) {
+    const mdContent = fs.readFileSync(filePath, "utf-8");
+
+    // Extract title from first H1 heading if present
+    const titleMatch = mdContent.match(/^#\s+(.+)$/m);
+    const title = titleMatch ? titleMatch[1].trim() : path.basename(file, ".md");
+
+    const htmlBody = marked.parse(mdContent);
+    const fullHtml = template(title, htmlBody, outFileName);
+
+    fs.writeFileSync(outFilePath, fullHtml, "utf-8");
+    console.log(`Generated ${outFileName} from ${file}`);
+  } else {
+    console.log(`Skipped ${outFileName} (up to date)`);
+  }
 }
