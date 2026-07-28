@@ -57,7 +57,7 @@ Issues = "https://github.com/anthonyjclark/pymatch/issues"
 include = ["match*", "tests*"]
 
 [tool.setuptools.package-data]
-match = ["*.c", "*.cu"]
+match = ["*.c", "*.cu", "resources/*"]
 
 [tool.ruff]
 line-length = 110
