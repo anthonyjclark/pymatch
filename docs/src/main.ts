@@ -67,7 +67,11 @@ function init() {
         runBtn.textContent = "Run";
       }
       if (outputText) {
-        outputText.textContent = output;
+        if (output.includes("<div") || output.includes("<svg")) {
+          outputText.innerHTML = output;
+        } else {
+          outputText.textContent = output;
+        }
       }
     } else if (type === "error") {
       isExecuting = false;
