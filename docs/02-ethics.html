@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="PyMatch - 2. Ethics" />
+    <title>PyMatch - 2. Ethics</title>
+  </head>
+
+  <body>
+    <header class="site-header">
+      <div class="header-container">
+        <h1><a href="/index.html" style="color: inherit; text-decoration: none;">PyMatch Documentation</a></h1>
+        <nav class="site-nav">
+          <a href="/index.html">Home</a>
+          <a href="/01-introduction.html" class="">1. Introduction</a>
+          <a href="/02-ethics.html" class="active">2. Ethics</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="content-container">
+      <div class="math-defs" style="display: none">
+        \[ \def\i{{^{(i)}}} \def\vx{{\mathbf{x}}} \def\vy{{\mathbf{y}}} \def\vw{{\mathbf{w}}}
+        \def\vb{{\mathbf{b}}} \def\vz{{\mathbf{z}}} \def\va{{\mathbf{a}}} \def\yhat{{\hat y}}
+        \def\vyhat{{\mathbf{\hat y}}} \def\mae{{||\vyhat - \vy||_1}} \def\vhmse{{\frac{1}{2N} ||(\vyhat
+        - \vy)^2||_1}} \def\vbce{{-\frac{1}{N}\sum_{i=1}^N (y\i \log{\yhat\i} + (1 - y\i)\log{(1-\yhat\i)})}} \]
+      </div>
+
+      <article class="doc-article">
+        <h1>2. Ethics</h1>
+<blockquote>
+<p>A bit of the maker goes into that which they make.</p>
+<p>— Unknown</p>
+</blockquote>
+<p>How is ethics important to NN (and AI in general)? It can help us answer questions such as:</p>
+<ul>
+<li>What should we build?</li>
+<li>What should we <strong>not</strong> build?</li>
+<li>How should we build something?</li>
+</ul>
+<details class="question">
+<summary><strong>Question:</strong> Who is in charge of enforcing ethics in AI?</summary>
+<div class="answer">
+<strong>Answer:</strong> Everyone and no one. We do not have a special <em>ethics force</em> to guide us. The problem is clearly that if everyone is responsible, nobody will think they need to act.
+</div>
+</details><details class="question">
+<summary><strong>Question:</strong> When should you start to consider ethical implications?</summary>
+<div class="answer">
+<strong>Answer:</strong> From the very beginning. This will make it easier to:
+<ul>
+  <li>avoid pitfalls,</li>
+  <li>analyze results from an ethical lens,</li>
+  <li>avoid wasting time, and</li>
+  <li>ensure the system <strong>is</strong> ethical.</li>
+</ul>
+</div>
+</details><p>Being ethical sounds like it should be easy, however we all come to the table with our own value systems, opinions, motivations, and power. What would you do if you were directed to build something you knew to be unethical? How does your answer change if your choices are to build or to quit?</p>
+<h2>Key Topics</h2>
+<p>This is not going to be an exhaustive discussion on ethics in AI and NNs. Instead, I&#39;ll point you to the resources in the Additional Material section. The topics below are taken from <a href="https://github.com/fastai/fastbook/blob/master/03_ethics.ipynb" title="fastbook/03_ethics.ipynb at master · fastai/fastbook">Ethics — fastbook</a>.</p>
+<p>Topics to consider:</p>
+<ol>
+<li><strong>Recourse and accountability</strong>: who is responsible (and liable) for the developed system? The user, developer, manager, owner, company, other?</li>
+<li><strong>Feedback loops</strong>: does the system control creation of the next round of input data (such as a video recommendation system)?</li>
+<li><strong>Bias</strong>: all systems have bias; what bias is in your system? Is the source of bias historical, from measurement, from aggregation, from the representation, other?</li>
+<li><strong>Disinformation</strong>: can your system be used for nefarious goals?</li>
+</ol>
+<h2>Strategies</h2>
+<p>Here are some questions you can ask to prevent running into trouble:</p>
+<ul>
+<li><p>General Questions:</p>
+<ul>
+<li>Should we even be doing this?</li>
+<li>What might be the accuracy of a simple non-ML alternative?</li>
+<li>What processes will we use to handle appeals/mistakes?</li>
+<li>How diverse is our team?</li>
+</ul>
+</li>
+<li><p>Data Questions:</p>
+<ul>
+<li>Is our data valid for its intended use?</li>
+<li>What bias could be in our data? (All data contains bias.)</li>
+<li>How could we minimize bias in our data and model?</li>
+<li>How should we “audit” our code and data?</li>
+</ul>
+</li>
+<li><p>Impact Questions:</p>
+<ul>
+<li>Do we expect different errors rates for different sub-groups in the data?</li>
+<li>What are likely misinterpretations of the results and what can be done to prevent those misinterpretations?</li>
+<li>How might we impinge individuals&#39; privacy and/or anonymity?</li>
+</ul>
+</li>
+</ul>
+<p>When should you ask these questions? The Markkula Center for Applied Ethics recommends scheduling regular meeting in which you perform ethical risk sweeping. See their <a href="https://www.scu.edu/ethics-in-technology-practice/ethical-toolkit/" title="Ethical Toolkit - Markkula Center for Applied Ethics">Ethical Toolkit</a> for more information.</p>
+<h2>Additional Material</h2>
+<ul>
+<li><a href="https://ethics.fast.ai">Practical Data Ethics</a></li>
+<li><a href="https://fairmlbook.org/">Fair ML Book</a></li>
+<li><a href="https://www.machine-ethics.net/podcast/">Machine Ethics Podcast</a></li>
+<li>Codes of Ethics from the <a href="https://www.acm.org/code-of-ethics">ACM</a>, <a href="https://www.ieee.org/about/corporate/governance/p7-8.html">IEEE</a>, and the <a href="https://www.datascienceassn.org/code-of-conduct.html">Data Science Association</a></li>
+</ul>
+
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <p>&copy; 2026 Anthony J. Clark. All rights reserved.</p>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

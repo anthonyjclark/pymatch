@@ -29,6 +29,7 @@ const template = (title, contentHtml, filename) => `<!doctype html>
         <nav class="site-nav">
           <a href="/index.html">Home</a>
           <a href="/01-introduction.html" class="${filename === "01-introduction.html" ? "active" : ""}">1. Introduction</a>
+          <a href="/02-ethics.html" class="${filename === "02-ethics.html" ? "active" : ""}">2. Ethics</a>
         </nav>
       </div>
     </header>
