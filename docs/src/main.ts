@@ -1,6 +1,5 @@
 import "./style.css";
 
-// Configure and initialize MathJax npm dependency
 window.MathJax = window.MathJax || {
   tex: {
     inlineMath: [
@@ -25,15 +24,14 @@ const codeInput = document.getElementById("code-input") as HTMLTextAreaElement |
 const runBtn = document.getElementById("run-btn") as HTMLButtonElement | null;
 const outputText = document.getElementById("output-text") as HTMLPreElement | null;
 
-function init() {
-  if (outputText) {
-    outputText.textContent = "Initializing Pyodide Web Worker...";
-  }
-  if (runBtn) {
-    runBtn.disabled = true;
-  }
+if (!codeInput || !runBtn || !outputText) {
+  throw new Error("Could not find code input, run button, or output text elements in the DOM.");
+}
 
-  // Create Pyodide background Web Worker (decouples WebAssembly from main UI thread)
+function init() {
+  outputText!.textContent = "Initializing Pyodide Web Worker...";
+  runBtn!.disabled = true;
+
   const worker = new Worker(new URL("./pyodide.worker.ts", import.meta.url), { type: "module" });
 
   let isWorkerReady = false;
