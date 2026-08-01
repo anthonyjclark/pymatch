@@ -1,17 +1,30 @@
 {
-    "cSpell.words": [
-        "autograd",
-        "filterwarnings",
-        "keepdims",
-        "MNIS",
-        "mnist",
-        "pyodide",
-        "pyproject",
-        "pytest",
-        "randn",
-        "setuptools",
-        "unbroadcast",
-        "unflatten",
-        "unshuffled"
-    ]
+  "[javascript]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode",
+    "editor.formatOnSave": true
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode",
+    "editor.formatOnSave": true
+  },
+  "cSpell.words": [
+    "autograd",
+    "chtml",
+    "filterwarnings",
+    "keepdims",
+    "mathjax",
+    "micropip",
+    "MNIS",
+    "mnist",
+    "oxfmt",
+    "pyimport",
+    "pyodide",
+    "pyproject",
+    "pytest",
+    "randn",
+    "setuptools",
+    "unbroadcast",
+    "unflatten",
+    "unshuffled"
+]
 }

@@ -55,9 +55,26 @@ uv run pytest
 uv run pytest tests/test_tensor.py
 ```
 
+## Manual Testing in Pyodide
+
+Running this and checking the UI experience is a good way to test the Pyodide build.
+
+```python
+import match
+from time import time
+start = time()
+data = match.extras.load_mnist_dataset()
+print(len(data[0]))
+print(time() - start)
+```
+
 ## Features
 
 - [ ] Add full site search
 - [ ] Add more interactive tutorials
 - [ ] Add more PyTorch functionality
 - [ ] Add syntax highlighting for code blocks
+- [ ] Add copy-to-clipboard buttons for code and output blocks
+- [ ] Find uses of `os` that should be replaced with `pathlib`
+- [ ] Add a script to download the pyodide release
+- [ ] Move docs source files and use docs as the build output folder
