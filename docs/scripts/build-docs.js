@@ -28,11 +28,31 @@ function protectMath(mdText) {
   return { protectedText, mathBlocks };
 }
 
+function protectTextareas(mdText) {
+  const textareas = [];
+  const regex = /(<textarea[\s\S]+?<\/textarea>)/gi;
+  const protectedText = mdText.replace(regex, (match) => {
+    const placeholder = `TEXTAREABLOCKTOKEN${textareas.length}ENDTOKEN`;
+    textareas.push(match);
+    return placeholder;
+  });
+  return { protectedText, textareas };
+}
+
 function restoreMath(htmlText, mathBlocks) {
   let restored = htmlText;
   for (let i = 0; i < mathBlocks.length; i++) {
     const placeholder = `MATHBLOCKTOKEN${i}ENDTOKEN`;
     restored = restored.replace(placeholder, mathBlocks[i]);
+  }
+  return restored;
+}
+
+function restoreTextareas(htmlText, textareas) {
+  let restored = htmlText;
+  for (let i = 0; i < textareas.length; i++) {
+    const placeholder = `TEXTAREABLOCKTOKEN${i}ENDTOKEN`;
+    restored = restored.replace(placeholder, textareas[i]);
   }
   return restored;
 }
@@ -159,10 +179,12 @@ for (let i = 0; i < chapters.length; i++) {
   const needsRebuild = !htmlExists || ch.mtimeMs > htmlMtime || scriptMtime > htmlMtime;
 
   if (needsRebuild) {
-    // Protect math expressions from marked parser mangling
-    const { protectedText, mathBlocks } = protectMath(ch.mdContent);
-    let parsedHtml = marked.parse(protectedText);
+    // Protect textareas and math expressions from marked parser mangling
+    const { protectedText: p1, textareas } = protectTextareas(ch.mdContent);
+    const { protectedText: p2, mathBlocks } = protectMath(p1);
+    let parsedHtml = marked.parse(p2);
     let htmlBody = restoreMath(parsedHtml, mathBlocks);
+    htmlBody = restoreTextareas(htmlBody, textareas);
 
     // Append Previous / Next chapter navigation
     const navHtml = `
