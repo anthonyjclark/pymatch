@@ -1,4 +1,8 @@
 import "./style.css";
+import hljs from "highlight.js/lib/core";
+import python from "highlight.js/lib/languages/python";
+
+hljs.registerLanguage("python", python);
 
 //
 // region: Setup
@@ -33,10 +37,67 @@ if (!codeInput || !runBtn || !outputText) {
 }
 
 //
-// region: Init
+// region: Interactive Code Editor (Syntax Highlighting)
+//
+
+function setupCodeEditor(textarea: HTMLTextAreaElement) {
+  const parent = textarea.parentElement;
+  if (!parent) return;
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "code-editor-wrapper";
+
+  const pre = document.createElement("pre");
+  pre.className = "code-editor-highlight hljs";
+  const code = document.createElement("code");
+  code.className = "language-python";
+  pre.appendChild(code);
+
+  parent.insertBefore(wrapper, textarea);
+  wrapper.appendChild(pre);
+  wrapper.appendChild(textarea);
+
+  const updateHighlight = () => {
+    let text = textarea.value;
+    if (text.endsWith("\n")) {
+      text += " ";
+    }
+    code.innerHTML = hljs.highlight(text, { language: "python" }).value;
+  };
+
+  const syncScroll = () => {
+    pre.scrollTop = textarea.scrollTop;
+    pre.scrollLeft = textarea.scrollLeft;
+  };
+
+  textarea.addEventListener("input", updateHighlight);
+  textarea.addEventListener("scroll", syncScroll);
+
+  textarea.addEventListener("keydown", (e: KeyboardEvent) => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      textarea.value = textarea.value.substring(0, start) + "    " + textarea.value.substring(end);
+      textarea.selectionStart = textarea.selectionEnd = start + 4;
+      updateHighlight();
+    }
+  });
+
+  // Initial highlight and scroll sync
+  updateHighlight();
+  syncScroll();
+
+  window.addEventListener("resize", syncScroll);
+}
+
+//
+// region: Init Worker & Events
 //
 
 function init() {
+  setupCodeEditor(codeInput!);
+
   outputText!.textContent = "Initializing Pyodide Web Worker...";
   runBtn!.disabled = true;
 

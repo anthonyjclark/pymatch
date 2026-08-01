@@ -333,18 +333,74 @@ details.question .answer {
   gap: 12px;
 }
 
-textarea {
+/* Interactive Code Input Editor Container */
+.code-editor-wrapper {
+  position: relative;
   width: 100%;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 14px;
-  padding: 12px;
-  box-sizing: border-box;
-  border: 1px solid var(--border-color);
   border-radius: var(--radius);
   background-color: #0f172a;
-  color: #f8fafc;
-  line-height: 1.5;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 }
+
+.code-editor-wrapper pre.code-editor-highlight,
+.code-editor-wrapper textarea#code-input {
+  margin: 0 !important;
+  padding: 14px 16px !important;
+  border: none !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+  tab-size: 4 !important;
+  -moz-tab-size: 4 !important;
+  white-space: pre-wrap !important;
+  word-break: break-all !important;
+  word-wrap: break-word !important;
+}
+
+.code-editor-wrapper pre.code-editor-highlight {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none !important;
+  z-index: 1;
+  background-color: transparent !important;
+  overflow: hidden !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.code-editor-wrapper pre.code-editor-highlight code {
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+.code-editor-wrapper textarea#code-input {
+  position: relative !important;
+  z-index: 2 !important;
+  background-color: transparent !important;
+  color: transparent !important;
+  caret-color: #38bdf8 !important;
+  resize: vertical !important;
+  outline: none !important;
+  display: block !important;
+  overflow: auto !important;
+}
+
+.code-editor-wrapper textarea#code-input::selection {
+  background-color: rgba(56, 189, 248, 0.25) !important;
+  color: transparent !important;
+}
+
 
 button {
   align-self: flex-start;
