@@ -1,8 +1,13 @@
-# TODO: remove these comments
+# TODO: look through these and remove those that we start using
 .github/
-dist/
-.venv/
+public/
+*-ubyte.gz
+pyodide-*.tar.bz2
+pyodide/
 *.whl
+dist/
+
+.venv/
 
 # From Vite
 # Logs
