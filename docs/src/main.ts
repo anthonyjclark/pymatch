@@ -1,5 +1,9 @@
 import "./style.css";
 
+//
+// region: Setup
+//
+
 window.MathJax = window.MathJax || {
   tex: {
     inlineMath: [
@@ -27,6 +31,10 @@ const outputText = document.getElementById("output-text") as HTMLPreElement | nu
 if (!codeInput || !runBtn || !outputText) {
   throw new Error("Could not find code input, run button, or output text elements in the DOM.");
 }
+
+//
+// region: Init
+//
 
 function init() {
   outputText!.textContent = "Initializing Pyodide Web Worker...";

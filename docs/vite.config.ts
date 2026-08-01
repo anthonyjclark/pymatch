@@ -34,6 +34,17 @@ function getHtmlFiles() {
     }, {});
 }
 
+function shouldIgnoreWarning(warning: { code?: string; message?: string }) {
+  const a =
+    warning.code === "PLUGIN_WARNING" &&
+    warning.message?.includes("pyodide") &&
+    warning.message?.includes("dynamic import");
+  const b =
+    warning.message?.includes("has been externalized for browser compatibility") &&
+    warning.message?.includes("pyodide");
+  return a || b;
+}
+
 const { matchVersion, matchWheelName } = getMatchPackageInfo();
 
 export default defineConfig({
@@ -44,5 +55,15 @@ export default defineConfig({
   optimizeDeps: { exclude: ["pyodide"] },
   // TODO: copy match wheel: viteStaticCopy({ targets: [ { src: resolve(import.meta.dirname, `../dist/${matchWheelName}`).replace(/\\/g, "/"), dest: ".", } ] })
   // plugins: [viteStaticCopyPyodide()],
-  build: { rollupOptions: { input: getHtmlFiles() } },
+  build: {
+    rollupOptions: {
+      input: getHtmlFiles(),
+      onwarn(warning, warn) {
+        if (shouldIgnoreWarning(warning)) {
+          return;
+        }
+        warn(warning);
+      },
+    },
+  },
 });

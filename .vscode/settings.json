@@ -16,6 +16,7 @@
     "micropip",
     "MNIS",
     "mnist",
+    "onwarn",
     "oxfmt",
     "pyimport",
     "pyodide",
@@ -26,5 +27,5 @@
     "unbroadcast",
     "unflatten",
     "unshuffled"
-]
+  ]
 }

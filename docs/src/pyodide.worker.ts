@@ -8,7 +8,6 @@ let isReady = false;
 //
 
 self.onmessage = (e: MessageEvent) => {
-  console.log("Worker received message:", e.data);
   const { type, wheelName, origin, code } = e.data;
   if (type === "init") {
     initWorker(wheelName, origin);
