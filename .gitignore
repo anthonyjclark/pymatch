@@ -6,6 +6,7 @@ pyodide-*.tar.bz2
 pyodide/
 *.whl
 dist/
+mnist.bin
 
 .venv/
 

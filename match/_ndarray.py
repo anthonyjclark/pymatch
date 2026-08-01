@@ -58,10 +58,14 @@ class NDArray:
             self.data = [float(data)]
             self.shape = () if shape is None else shape
 
-        elif isinstance(data, (list, tuple)):
-            flat_data, detected_shape = self._flatten(data)
-            self.data = [float(x) for x in flat_data]
-            self.shape = tuple(shape) if shape is not None else detected_shape
+        elif isinstance(data, (list, tuple, Sequence)):
+            if shape is not None and len(data) > 0 and not isinstance(data[0], (list, tuple)):
+                self.data = list(data) if not isinstance(data, list) else data
+                self.shape = tuple(shape)
+            else:
+                flat_data, detected_shape = self._flatten(data)
+                self.data = list(flat_data)
+                self.shape = tuple(shape) if shape is not None else detected_shape
 
         elif isinstance(data, NDArray):
             self.data = list(data.data)
@@ -76,6 +80,15 @@ class NDArray:
             raise ValueError(f"Data size {n} does not match size {shape_n} for shape {self.shape}")
 
         self.strides = self._calc_strides(self.shape)
+
+    @staticmethod
+    def _create_flat(data: Sequence[Scalar], shape: Shape, dtype: type[Scalar] = float) -> NDArray:
+        arr = NDArray.__new__(NDArray)
+        arr.dtype = dtype
+        arr.data = list(data) if not isinstance(data, list) else data
+        arr.shape = shape
+        arr.strides = arr._calc_strides(shape)
+        return arr
 
     @staticmethod
     def _flatten(seq: NestedArray) -> tuple[list[Scalar], Shape]:
