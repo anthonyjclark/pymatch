@@ -99,20 +99,20 @@ $$
 z^{(i)} = \sum_{k=1}^{n_x} x_k^{(i)} w_k + b = \vx^{(i)T} \vw + b
 $$
 
-Using PyTorch:
+Using PyMatch (`match`):
 
 ```python
-import torch
+import match
 
 N = 100
 nx = 4
-X = torch.randn(N, nx)
-w = torch.randn(nx)
+X = match.randn(N, nx)
+w = match.randn(nx)
 b = 0
 
 for xi in X:
     zi = xi @ w + b
-    ai = torch.sigmoid(zi)
+    ai = zi.sigmoid()
 ```
 
 ## Vectorizing Inputs
@@ -127,22 +127,22 @@ $$
 $$
 
 ```python
-import torch
+import match
 
 N = 100
 nx = 4
-X = torch.randn(N, nx)
-w = torch.randn(nx)
+X = match.randn(N, nx)
+w = match.randn(nx)
 b = 0
 
 z = X @ w + b
-yhat = torch.sigmoid(z)
+yhat = z.sigmoid()
 ```
 
 <details class="question">
 <summary><strong>Question:</strong> What are the dimensions of $\vz$ and $\va$ (aka $\vyhat$)?</summary>
 <div class="answer">
-<strong>Answer:</strong> We are computing a single output value for each input, so the shape of these vectors is $(N \times 1)$.
+<strong>Answer:</strong> We are computing a single output value for each input, so the shape of these vectors is $(N \times 1)$. PyMatch will treat these as arrays with $N$ elements instead of as column vectors.
 </div>
 </details>
 
@@ -181,15 +181,19 @@ $$
 
 ## Neuron Batch Gradient Descent Code
 
-Here is a complete example training a neuron to classify images as digit 1 or digit 7:
+Here is a complete example training a neuron using PyMatch (`match`) and `match.extras` to classify binary MNIST digits:
 
 ```python
-import torch
+import match
+from match.extras import get_binary_mnist_one_batch
+
+# Load binary MNIST dataset (digit 1 vs digit 7)
+train_X, train_y, valid_X, valid_y = get_binary_mnist_one_batch("../Data", classA=1, classB=7, flatten=True)
 
 # Neuron parameters
 nx = 28 * 28
-w = torch.randn(nx) * 0.01
-b = torch.zeros(1)
+w = match.randn(nx) * 0.01
+b = match.zeros(1)
 
 num_epochs = 4
 learning_rate = 0.01
@@ -197,8 +201,8 @@ learning_rate = 0.01
 # Training loop
 for epoch in range(num_epochs):
     # Forward pass
-    yhat = torch.sigmoid(train_X @ w + b)
-    losses = -(train_y * torch.log(yhat) + (1 - train_y) * torch.log(1 - yhat))
+    yhat = (train_X @ w + b).sigmoid()
+    losses = -(train_y * yhat.log() + (1 - train_y) * (1 - yhat).log())
 
     # Backward pass (gradients)
     dz = yhat - train_y
