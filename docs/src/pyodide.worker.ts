@@ -54,36 +54,38 @@ async function initWorker(wheelName: string, origin: string) {
     return;
   }
 
-  //   // Configure Matplotlib dark theme defaults
-  //   try {
-  //     pyodide.runPython(`
-  // import matplotlib
-  // import matplotlib.pyplot as plt
-  // plt.style.use('dark_background')
-  // `);
-  //   } catch (e) {
-  //     console.warn("Matplotlib config warning:", e);
-  //   }
+  postMessage({ type: "status", text: "Configuring Matplotlib..." });
+  try {
+    await pyodide.runPythonAsync(`
+import matplotlib
+matplotlib.use("AGG")  # non-interactive backend for workers
+import matplotlib.pyplot as plt
+plt.style.use('dark_background')
+`);
+  } catch (e) {
+    postMessage({ type: "error", error: "Failed to configure Matplotlib: " + String(e) });
+    return;
+  }
 
-  // // Pre-fetch preprocessed MNIST dataset into Pyodide VFS
-  // try {
-  //   const mnistUrl = new URL("/data/mnist.bin", origin).href;
-  //   const res = await fetch(mnistUrl);
-  //   if (res.ok) {
-  //     const binBuf = new Uint8Array(await res.arrayBuffer());
-  //     try {
-  //       pyodide.FS.mkdir("/data");
-  //     } catch (_) {}
-  //     pyodide.FS.writeFile("/data/mnist.bin", binBuf);
-  //     // Background pre-warm dataset cache in worker memory
-  //     postMessage({ type: "status", text: "Pre-warming PyMatch dataset cache..." });
-  //     pyodide.runPython(
-  //       "from match.extras import load_mnist_dataset\ntry:\n    load_mnist_dataset()\nexcept Exception:\n    pass",
-  //     );
-  //   }
-  // } catch (e) {
-  //   console.warn("Worker MNIST pre-fetch warning:", e);
-  // }
+  // Pre-fetch preprocessed MNIST dataset into Pyodide VFS
+  try {
+    const mnistUrl = new URL("/data/mnist.bin", origin).href;
+    const res = await fetch(mnistUrl);
+    if (res.ok) {
+      const binBuf = new Uint8Array(await res.arrayBuffer());
+      try {
+        pyodide.FS.mkdir("/data");
+      } catch (_) {}
+      pyodide.FS.writeFile("/data/mnist.bin", binBuf);
+      // Background pre-warm dataset cache in worker memory
+      postMessage({ type: "status", text: "Pre-warming PyMatch dataset cache..." });
+      pyodide.runPython(
+        "from match.extras import load_mnist_dataset\ntry:\n    load_mnist_dataset()\nexcept Exception:\n    pass",
+      );
+    }
+  } catch (e) {
+    console.warn("Worker MNIST pre-fetch warning:", e);
+  }
 
   isReady = true;
   postMessage({ type: "ready" });

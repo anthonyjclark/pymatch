@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="PyMatch - MNIST Test Page" />
+    <title>PyMatch - MNIST Test Page</title>
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']],
+          processEscapes: true
+        },
+        options: {
+          ignoreHtmlClass: 'tex2jax_ignore',
+          processHtmlClass: 'tex2jax_process'
+        }
+      };
+    </script>
+  </head>
+
+  <body>
+    <header class="site-header">
+      <div class="header-container">
+        <h1><a href="/index.html" style="color: inherit; text-decoration: none;">PyMatch Documentation</a></h1>
+        <nav class="site-nav">
+          <a href="/index.html" class="">Home</a>
+          <a href="/guide.html" class="">Guide</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="content-container">
+      <div class="math-defs" style="display: none">
+        \[
+          \def\i{{^{(i)}}}
+          \def\vx{{\mathbf{x}}}
+          \def\vy{{\mathbf{y}}}
+          \def\vw{{\mathbf{w}}}
+          \def\vb{{\mathbf{b}}}
+          \def\vz{{\mathbf{z}}}
+          \def\va{{\mathbf{a}}}
+          \def\yhat{{\hat y}}
+          \def\vyhat{{\mathbf{\hat y}}}
+          \def\mae{{||\vyhat - \vy||_1}}
+          \def\vhmse{{\frac{1}{2N} ||(\vyhat - \vy)^2||_1}}
+          \def\vbce{{-\frac{1}{N}\sum_{i=1}^N (y\i \log{\yhat\i} + (1 - y\i)\log{(1-\yhat\i)})}}
+        \]
+      </div>
+
+      <article class="doc-article">
+        <h1>MNIST Test Page</h1>
+<p>This test page verifies loading the preprocessed MNIST dataset with PyMatch and plots a random sample of 16 images in an 8&times;2 grid layout using <strong>Matplotlib</strong>.</p>
+<h2>Interactive MNIST Sample Plotter</h2>
+<p>Click <strong>Run</strong> below to load MNIST using PyMatch and plot a random 8&times;2 grid of 16 samples with <code>matplotlib.pyplot</code>:</p>
+<pre><code class="language-python">import match
+from match.extras import load_mnist_dataset
+import matplotlib.pyplot as plt
+import random
+
+# 1. Load MNIST dataset partitions
+train_ds, valid_ds = load_mnist_dataset()
+
+# 2. Select 16 random sample indices (8x2 grid)
+indices = random.sample(range(len(train_ds)), 16)
+
+# 3. Create 8x2 subplot grid using Matplotlib
+fig, axes = plt.subplots(2, 8, figsize=(12, 3.5))
+
+for i, idx in enumerate(indices):
+    img_tensor, label = train_ds[idx]
+    
+    # Reshape (784,) 1D tensor data to (28, 28) 2D image matrix
+    img_data = img_tensor.data.data
+    grid_2d = [img_data[r * 28 : (r + 1) * 28] for r in range(28)]
+    
+    ax = axes[i // 8, i % 8]
+    ax.imshow(grid_2d, cmap=&quot;gray&quot;)
+    ax.set_title(f&quot;Label: {int(label.item())}&quot;, fontsize=9)
+    ax.axis(&quot;off&quot;)
+
+plt.tight_layout()
+plt.show()
+
+print(f&quot;Loaded {len(train_ds)} train samples and {len(valid_ds)} validation samples.&quot;)
+</code></pre>
+<div class="interactive-playground">
+  <h3>MNIST Matplotlib Sample Plotter</h3>
+  <textarea id="code-input" rows="22">import match
+from match.extras import load_mnist_dataset
+import matplotlib.pyplot as plt
+import random
+
+# Load dataset partitions
+train_ds, valid_ds = load_mnist_dataset()
+
+# Select 16 random sample indices (8x2 grid)
+indices = random.sample(range(len(train_ds)), 16)
+
+# Create 8x2 subplot grid
+fig, axes = plt.subplots(2, 8, figsize=(12, 3.5))
+
+for i, idx in enumerate(indices):
+    img_tensor, label = train_ds[idx]
+    
+    img_data = img_tensor.data.data
+    grid_2d = [img_data[r * 28 : (r + 1) * 28] for r in range(28)]
+    
+    ax = axes[i // 8, i % 8]
+    ax.imshow(grid_2d, cmap="gray")
+    ax.set_title(f"Label: {int(label.item())}", fontsize=9)
+    ax.axis("off")
+
+plt.tight_layout()
+plt.show()
+
+print(f"Loaded {len(train_ds)} train and {len(valid_ds)} valid samples.")
+</textarea>
+  <button id="run-btn">Run</button>
+  <pre id="output-text"></pre>
+</div>
+
+      <nav class="chapter-nav">
+        <a href="/13-terminology.html" class="nav-prev">&larr; Previous: 13. Terminology Glossary</a>
+        <span></span>
+      </nav>
+    
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <p>&copy; 2026 Anthony J. Clark. All rights reserved.</p>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
