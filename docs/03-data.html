@@ -122,45 +122,39 @@ For efficiency's sake, we often represent a one-hot encoded vector using just th
 </details><p>You might now wonder why we split a dataset into training/validation/evaluation partitions. It is reasonable to think that we would be better off using all 70000 images to train a neural network. However, we need some method for <em>measuring</em> how well a model is performing. That is the purpose of the validation set—to measure performance.</p>
 <p>If we measure performance directly on the training dataset, we might trick ourselves into thinking that the neural network will perform very well when it is eventually deployed as part of an application, when in reality the network might only perform well specifically on the examples found in the training dataset.</p>
 <p>Similarly, the evaluation partition is only used to compare performance after hyper-parameter tuning.</p>
-<h2>Loading MNIST Using PyTorch</h2>
-<p>We&#39;ve discussed notation and general concepts, but how would we write this out in code? Here is an example of how to load the MNIST dataset using PyTorch.</p>
-<pre><code class="language-python">from torch.utils.data import DataLoader
-from torchvision.datasets import MNIST
-from torchvision.transforms import Compose, Normalize, ToTensor
+<h2>Loading MNIST Using PyMatch Extras</h2>
+<p>We&#39;ve discussed notation and general concepts, but how would we write this out in code? Here is an example of how to load dataset partitions using PyMatch (<code>match.extras</code> and <code>match.utils.data</code>).</p>
+<pre><code class="language-python">import match
+from match.extras import load_mnist_dataset
+from match.utils.data import DataLoader
 
-# Location in which to store downloaded data
-data_dir = &quot;../Data&quot;
+# Load training and validation datasets using match.extras
+train_dataset, valid_dataset = load_mnist_dataset(data_dir=&quot;../Data&quot;)
 
-mnist_xforms = Compose([ToTensor(), Normalize((0.1307,), (0.3081,))])
+# DataLoaders provide an easy interface for interacting with data
+train_loader = DataLoader(train_dataset, batch_size=len(train_dataset))
+valid_loader = DataLoader(valid_dataset, batch_size=len(valid_dataset))
 
-# Load data files (training and validation partitions)
-train_data = MNIST(root=data_dir, train=True, download=True, transform=mnist_xforms)
-valid_data = MNIST(root=data_dir, train=False, download=True, transform=mnist_xforms)
+# Retrieve all inputs and targets
+X_train_batch, y_train_batch = next(iter(train_loader))
+X_valid_batch, y_valid_batch = next(iter(valid_loader))
 
-# Data loaders provide an easy interface for interacting with data
-train_loader = DataLoader(train_data, batch_size=len(train_data))
-valid_loader = DataLoader(valid_data, batch_size=len(valid_data))
-
-# Force the train loader to give us all inputs and targets
-X_train, y_train = next(iter(train_loader))
-X_valid, y_valid = next(iter(valid_loader))
-
-print(&quot;Training input shape    :&quot;, X_train.shape)
-print(&quot;Training target shape   :&quot;, y_train.shape)
-print(&quot;Validation input shape  :&quot;, X_valid.shape)
-print(&quot;Validation target shape :&quot;, y_valid.shape)
+print(&quot;Training input shape    :&quot;, X_train_batch.shape)
+print(&quot;Training target shape   :&quot;, y_train_batch.shape)
+print(&quot;Validation input shape  :&quot;, X_valid_batch.shape)
+print(&quot;Validation target shape :&quot;, y_valid_batch.shape)
 </code></pre>
 <details class="question">
 <summary><strong>Question:</strong> What do you expect to see as this program's output?</summary>
 <div class="answer">
 <strong>Answer:</strong>
 <pre>
-Training input shape    : torch.Size([60000, 1, 28, 28])
-Training target shape   : torch.Size([60000])
-Validation input shape  : torch.Size([10000, 1, 28, 28])
-Validation target shape : torch.Size([10000])
+Training input shape    : (60000, 784)
+Training target shape   : (60000,)
+Validation input shape  : (10000, 784)
+Validation target shape : (10000,)
 </pre>
-This is slightly different than what we discussed. PyTorch expects us to use this dataset with a convolutional neural network.
+This represents standard 2D input matrices where rows correspond to training instances and columns correspond to input pixel features.
 </div>
 </details><h2>Similarity Digit Classifier</h2>
 <p>Before we get into training NNs, we will start with a non-ML classifier. This will provide a nice comparison, and show that ML must be <em>learning</em> something beyond simple comparisons.</p>
@@ -178,31 +172,26 @@ This is slightly different than what we discussed. PyTorch expects us to use thi
 <div class="answer">
 <strong>Answer:</strong> If you are equally likely to guess any of the ten digits, then you would be right around 10% of the time ($\frac{1}{10}$).
 </div>
-</details><p>And now some code for finding the most similar digit.</p>
+</details><p>And now some code for finding the most similar digit using PyMatch.</p>
 <pre><code class="language-python">from math import inf
-import torch
-from torch.utils.data import DataLoader
-from torchvision.datasets import MNIST
-from torchvision.transforms import Compose, Normalize, ToTensor
+import match
+from match.extras import load_mnist_dataset
+from match.utils.data import DataLoader
 
-data_dir = &quot;../Data&quot;
-mnist_xforms = Compose([ToTensor(), Normalize((0.1307,), (0.3081,))])
+train_dataset, valid_dataset = load_mnist_dataset(data_dir=&quot;../Data&quot;)
 
-train_data = MNIST(root=data_dir, train=True, download=True, transform=mnist_xforms)
-valid_data = MNIST(root=data_dir, train=False, download=True, transform=mnist_xforms)
+train_loader = DataLoader(train_dataset, batch_size=len(train_dataset))
+valid_loader = DataLoader(valid_dataset, batch_size=len(valid_dataset))
 
-train_loader = DataLoader(train_data, batch_size=len(train_data))
-valid_loader = DataLoader(valid_data, batch_size=len(valid_data))
-
-X_train, y_train = next(iter(train_loader))
-X_valid, y_valid = next(iter(valid_loader))
+X_train_batch, y_train_batch = next(iter(train_loader))
+X_valid_batch, y_valid_batch = next(iter(valid_loader))
 
 # Get the average for each digit based on all training examples
 digit_averages = {}
 for digit in range(10):
-    digit_averages[digit] = X_train[y_train == digit].mean(dim=0).squeeze()
+    digit_averages[digit] = X_train_batch[y_train_batch == digit].mean(dim=0).squeeze()
 
-def get_most_similar(image: torch.Tensor, averages: dict):
+def get_most_similar(image: match.Tensor, averages: dict):
     closest_label = None
     closest_distance = inf
     for label in averages:
@@ -213,10 +202,10 @@ def get_most_similar(image: torch.Tensor, averages: dict):
     return closest_label
 
 num_correct = 0
-for image, label in zip(X_valid, y_valid):
+for image, label in zip(X_valid_batch, y_valid_batch):
     num_correct += label == get_most_similar(image, digit_averages)
 
-print(f&quot;Percent guessed correctly: {num_correct/len(X_valid)*100:.2f}%&quot;)
+print(f&quot;Percent guessed correctly: {num_correct/len(X_valid_batch)*100:.2f}%&quot;)
 </code></pre>
 <details class="question">
 <summary><strong>Question:</strong> Take a guess at the accuracy of our similarity-based model.</summary>
