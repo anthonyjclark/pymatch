@@ -46,6 +46,19 @@ A^{[l]} &= g^{[l]}(Z^{[l]})
 \end{align}
 
 <details class="question">
+<summary><strong>Question:</strong> Why do we have $\mathbf{1} \vb^{[l]T}$?</summary>
+<div class="answer">
+<strong>Answer:</strong> This ensures that the dimensions are correct between added matrices. Try this out in PyMatch:
+<pre><code>import match
+N, nl = 10, 4
+b = match.randn(nl, 1)
+ONE = match.ones(N, 1)
+print(ONE @ b.T)
+</code></pre>
+</div>
+</details>
+
+<details class="question">
 <summary><strong>Question:</strong> What is the shape of $Z^{[l]}$?</summary>
 <div class="answer">
 <strong>Answer:</strong> $Z^{[l]}$ is $(N \times n_l)$.
@@ -101,50 +114,50 @@ W^{[2]} &:= W^{[2]} - η \frac{∂ℒ}{∂ W^{[2]}} \\
 ## Two-Layer Neural Network Code
 
 ```python
-import torch
+import match
 
 n0 = 28 * 28
 n1 = 2
 n2 = 1
 
-W1 = torch.randn(n1, n0)
-b1 = torch.randn(n1)
-W2 = torch.randn(n2, n1)
-b2 = torch.randn(n2)
+W1 = match.randn(n1, n0)
+b1 = match.randn(n1)
+W2 = match.randn(n2, n1)
+b2 = match.randn(n2)
 
 def model(A0):
     Z1 = A0 @ W1.T + b1
-    A1 = torch.sigmoid(Z1)
+    A1 = Z1.sigmoid()
     Z2 = A1 @ W2.T + b2
-    A2 = torch.sigmoid(Z2)
+    A2 = Z2.sigmoid()
     return Z1, A1, Z2, A2.squeeze()
 ```
 
 ## Automatic Differentiation
 
-Instead of computing derivatives by hand, machine learning frameworks use **automatic differentiation**. An automatic differentiation library:
+Instead of computing derivatives by hand, machine learning frameworks use **automatic differentiation**. PyMatch (`match`) has automatic differentiation built-in:
 
 1. Creates a compute graph from your tensor operations.
 2. Performs a topological sort on the compute graph.
 3. Computes gradients and backpropagates them to all matrices.
 
 ```python
-import torch
+import match
 
 N, n0, n1, n2 = 20, 10, 7, 13
 
-A0 = torch.randn(N, n0)
-Y = torch.randn(N, n2)
+A0 = match.randn(N, n0)
+Y = match.randn(N, n2)
 
-W1 = torch.randn(n1, n0, requires_grad=True)
-b1 = torch.randn(n1, requires_grad=True)
+W1 = match.randn(n1, n0, requires_grad=True)
+b1 = match.randn(n1, requires_grad=True)
 Z1 = A0 @ W1.T + b1
-A1 = torch.sigmoid(Z1)
+A1 = Z1.sigmoid()
 
-W2 = torch.randn(n2, n1, requires_grad=True)
-b2 = torch.randn(n2, requires_grad=True)
+W2 = match.randn(n2, n1, requires_grad=True)
+b2 = match.randn(n2, requires_grad=True)
 Z2 = A1 @ W2.T + b2
-A2 = torch.sigmoid(Z2)
+A2 = Z2.sigmoid()
 
 loss = ((A2 - Y) ** 2).mean()
 loss.backward()
