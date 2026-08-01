@@ -2,6 +2,21 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { marked } from "marked";
+import hljs from "highlight.js/lib/core";
+import python from "highlight.js/lib/languages/python";
+
+hljs.registerLanguage("python", python);
+
+marked.use({
+  renderer: {
+    code({ text, lang }) {
+      const language = lang && hljs.getLanguage(lang) ? lang : "python";
+      const highlighted = hljs.highlight(text, { language }).value;
+      return `<pre class="hljs"><code class="language-${language}">${highlighted}</code></pre>`;
+    },
+  },
+});
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

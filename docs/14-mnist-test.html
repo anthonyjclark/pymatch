@@ -54,38 +54,36 @@
 <p>This test page verifies loading the preprocessed MNIST dataset with PyMatch and plots a random sample of 16 images in an 8&times;2 grid layout using <strong>Matplotlib</strong>.</p>
 <h2>Interactive MNIST Sample Plotter</h2>
 <p>Click <strong>Run</strong> below to load MNIST using PyMatch and plot a random 8&times;2 grid of 16 samples with <code>matplotlib.pyplot</code>:</p>
-<pre><code class="language-python">import match
-from match.extras import load_mnist_dataset
-import matplotlib.pyplot as plt
-import random
+<pre class="hljs"><code class="language-python"><span class="hljs-keyword">import</span> <span class="hljs-keyword">match</span>
+<span class="hljs-keyword">from</span> <span class="hljs-keyword">match</span>.extras <span class="hljs-keyword">import</span> load_mnist_dataset
+<span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt
+<span class="hljs-keyword">import</span> random
 
-# 1. Load MNIST dataset partitions
+<span class="hljs-comment"># 1. Load MNIST dataset partitions</span>
 train_ds, valid_ds = load_mnist_dataset()
 
-# 2. Select 16 random sample indices (8x2 grid)
-indices = random.sample(range(len(train_ds)), 16)
+<span class="hljs-comment"># 2. Select 16 random sample indices (8x2 grid)</span>
+indices = random.sample(<span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(train_ds)), <span class="hljs-number">16</span>)
 
-# 3. Create 8x2 subplot grid using Matplotlib
-fig, axes = plt.subplots(2, 8, figsize=(12, 3.5))
+<span class="hljs-comment"># 3. Create 8x2 subplot grid using Matplotlib</span>
+fig, axes = plt.subplots(<span class="hljs-number">2</span>, <span class="hljs-number">8</span>, figsize=(<span class="hljs-number">12</span>, <span class="hljs-number">3.5</span>))
 
-for i, idx in enumerate(indices):
+<span class="hljs-keyword">for</span> i, idx <span class="hljs-keyword">in</span> <span class="hljs-built_in">enumerate</span>(indices):
     img_tensor, label = train_ds[idx]
     
-    # Reshape (784,) 1D tensor data to (28, 28) 2D image matrix
+    <span class="hljs-comment"># Reshape (784,) 1D tensor data to (28, 28) 2D image matrix</span>
     img_data = img_tensor.data.data
-    grid_2d = [img_data[r * 28 : (r + 1) * 28] for r in range(28)]
+    grid_2d = [img_data[r * <span class="hljs-number">28</span> : (r + <span class="hljs-number">1</span>) * <span class="hljs-number">28</span>] <span class="hljs-keyword">for</span> r <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">28</span>)]
     
-    ax = axes[i // 8, i % 8]
-    ax.imshow(grid_2d, cmap=&quot;gray&quot;)
-    ax.set_title(f&quot;Label: {int(label.item())}&quot;, fontsize=9)
-    ax.axis(&quot;off&quot;)
+    ax = axes[i // <span class="hljs-number">8</span>, i % <span class="hljs-number">8</span>]
+    ax.imshow(grid_2d, cmap=<span class="hljs-string">&quot;gray&quot;</span>)
+    ax.set_title(<span class="hljs-string">f&quot;Label: <span class="hljs-subst">{<span class="hljs-built_in">int</span>(label.item())}</span>&quot;</span>, fontsize=<span class="hljs-number">9</span>)
+    ax.axis(<span class="hljs-string">&quot;off&quot;</span>)
 
 plt.tight_layout()
 plt.show()
 
-print(f&quot;Loaded {len(train_ds)} train samples and {len(valid_ds)} validation samples.&quot;)
-</code></pre>
-<div class="interactive-playground">
+<span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Loaded <span class="hljs-subst">{<span class="hljs-built_in">len</span>(train_ds)}</span> train samples and <span class="hljs-subst">{<span class="hljs-built_in">len</span>(valid_ds)}</span> validation samples.&quot;</span>)</code></pre><div class="interactive-playground">
   <h3>MNIST Matplotlib Sample Plotter</h3>
   <textarea id="code-input" rows="22">import match
 from match.extras import load_mnist_dataset

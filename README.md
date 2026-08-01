@@ -73,7 +73,6 @@ print(time() - start)
 - [ ] Add full site search
 - [ ] Add more interactive tutorials
 - [ ] Add more PyTorch functionality
-- [ ] Add syntax highlighting for code blocks
 - [ ] Add copy-to-clipboard buttons for code and output blocks
 - [ ] Find uses of `os` that should be replaced with `pathlib`
 - [ ] Add a script to download the pyodide release

@@ -124,27 +124,25 @@ For efficiency's sake, we often represent a one-hot encoded vector using just th
 <p>Similarly, the evaluation partition is only used to compare performance after hyper-parameter tuning.</p>
 <h2>Loading MNIST Using PyMatch Extras</h2>
 <p>We&#39;ve discussed notation and general concepts, but how would we write this out in code? Here is an example of how to load dataset partitions using PyMatch (<code>match.extras</code> and <code>match.utils.data</code>).</p>
-<pre><code class="language-python">import match
-from match.extras import load_mnist_dataset
-from match.utils.data import DataLoader
+<pre class="hljs"><code class="language-python"><span class="hljs-keyword">import</span> <span class="hljs-keyword">match</span>
+<span class="hljs-keyword">from</span> <span class="hljs-keyword">match</span>.extras <span class="hljs-keyword">import</span> load_mnist_dataset
+<span class="hljs-keyword">from</span> <span class="hljs-keyword">match</span>.utils.data <span class="hljs-keyword">import</span> DataLoader
 
-# Load training and validation datasets using match.extras
-train_dataset, valid_dataset = load_mnist_dataset(data_dir=&quot;../Data&quot;)
+<span class="hljs-comment"># Load training and validation datasets using match.extras</span>
+train_dataset, valid_dataset = load_mnist_dataset(data_dir=<span class="hljs-string">&quot;../Data&quot;</span>)
 
-# DataLoaders provide an easy interface for interacting with data
-train_loader = DataLoader(train_dataset, batch_size=len(train_dataset))
-valid_loader = DataLoader(valid_dataset, batch_size=len(valid_dataset))
+<span class="hljs-comment"># DataLoaders provide an easy interface for interacting with data</span>
+train_loader = DataLoader(train_dataset, batch_size=<span class="hljs-built_in">len</span>(train_dataset))
+valid_loader = DataLoader(valid_dataset, batch_size=<span class="hljs-built_in">len</span>(valid_dataset))
 
-# Retrieve all inputs and targets
-X_train_batch, y_train_batch = next(iter(train_loader))
-X_valid_batch, y_valid_batch = next(iter(valid_loader))
+<span class="hljs-comment"># Retrieve all inputs and targets</span>
+X_train_batch, y_train_batch = <span class="hljs-built_in">next</span>(<span class="hljs-built_in">iter</span>(train_loader))
+X_valid_batch, y_valid_batch = <span class="hljs-built_in">next</span>(<span class="hljs-built_in">iter</span>(valid_loader))
 
-print(&quot;Training input shape    :&quot;, X_train_batch.shape)
-print(&quot;Training target shape   :&quot;, y_train_batch.shape)
-print(&quot;Validation input shape  :&quot;, X_valid_batch.shape)
-print(&quot;Validation target shape :&quot;, y_valid_batch.shape)
-</code></pre>
-<details class="question">
+<span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Training input shape    :&quot;</span>, X_train_batch.shape)
+<span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Training target shape   :&quot;</span>, y_train_batch.shape)
+<span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Validation input shape  :&quot;</span>, X_valid_batch.shape)
+<span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Validation target shape :&quot;</span>, y_valid_batch.shape)</code></pre><details class="question">
 <summary><strong>Question:</strong> What do you expect to see as this program's output?</summary>
 <div class="answer">
 <strong>Answer:</strong>
@@ -173,41 +171,39 @@ This represents standard 2D input matrices where rows correspond to training ins
 <strong>Answer:</strong> If you are equally likely to guess any of the ten digits, then you would be right around 10% of the time ($\frac{1}{10}$).
 </div>
 </details><p>And now some code for finding the most similar digit using PyMatch.</p>
-<pre><code class="language-python">from math import inf
-import match
-from match.extras import load_mnist_dataset
-from match.utils.data import DataLoader
+<pre class="hljs"><code class="language-python"><span class="hljs-keyword">from</span> math <span class="hljs-keyword">import</span> inf
+<span class="hljs-keyword">import</span> <span class="hljs-keyword">match</span>
+<span class="hljs-keyword">from</span> <span class="hljs-keyword">match</span>.extras <span class="hljs-keyword">import</span> load_mnist_dataset
+<span class="hljs-keyword">from</span> <span class="hljs-keyword">match</span>.utils.data <span class="hljs-keyword">import</span> DataLoader
 
-train_dataset, valid_dataset = load_mnist_dataset(data_dir=&quot;../Data&quot;)
+train_dataset, valid_dataset = load_mnist_dataset(data_dir=<span class="hljs-string">&quot;../Data&quot;</span>)
 
-train_loader = DataLoader(train_dataset, batch_size=len(train_dataset))
-valid_loader = DataLoader(valid_dataset, batch_size=len(valid_dataset))
+train_loader = DataLoader(train_dataset, batch_size=<span class="hljs-built_in">len</span>(train_dataset))
+valid_loader = DataLoader(valid_dataset, batch_size=<span class="hljs-built_in">len</span>(valid_dataset))
 
-X_train_batch, y_train_batch = next(iter(train_loader))
-X_valid_batch, y_valid_batch = next(iter(valid_loader))
+X_train_batch, y_train_batch = <span class="hljs-built_in">next</span>(<span class="hljs-built_in">iter</span>(train_loader))
+X_valid_batch, y_valid_batch = <span class="hljs-built_in">next</span>(<span class="hljs-built_in">iter</span>(valid_loader))
 
-# Get the average for each digit based on all training examples
+<span class="hljs-comment"># Get the average for each digit based on all training examples</span>
 digit_averages = {}
-for digit in range(10):
-    digit_averages[digit] = X_train_batch[y_train_batch == digit].mean(dim=0).squeeze()
+<span class="hljs-keyword">for</span> digit <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">10</span>):
+    digit_averages[digit] = X_train_batch[y_train_batch == digit].mean(dim=<span class="hljs-number">0</span>).squeeze()
 
-def get_most_similar(image: match.Tensor, averages: dict):
-    closest_label = None
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">get_most_similar</span>(<span class="hljs-params">image: <span class="hljs-keyword">match</span>.Tensor, averages: <span class="hljs-built_in">dict</span></span>):
+    closest_label = <span class="hljs-literal">None</span>
     closest_distance = inf
-    for label in averages:
-        distance = (image - averages[label]).abs().mean()
-        if distance &lt; closest_distance:
+    <span class="hljs-keyword">for</span> label <span class="hljs-keyword">in</span> averages:
+        distance = (image - averages[label]).<span class="hljs-built_in">abs</span>().mean()
+        <span class="hljs-keyword">if</span> distance &lt; closest_distance:
             closest_label = label
             closest_distance = distance
-    return closest_label
+    <span class="hljs-keyword">return</span> closest_label
 
-num_correct = 0
-for image, label in zip(X_valid_batch, y_valid_batch):
+num_correct = <span class="hljs-number">0</span>
+<span class="hljs-keyword">for</span> image, label <span class="hljs-keyword">in</span> <span class="hljs-built_in">zip</span>(X_valid_batch, y_valid_batch):
     num_correct += label == get_most_similar(image, digit_averages)
 
-print(f&quot;Percent guessed correctly: {num_correct/len(X_valid_batch)*100:.2f}%&quot;)
-</code></pre>
-<details class="question">
+<span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Percent guessed correctly: <span class="hljs-subst">{num_correct/<span class="hljs-built_in">len</span>(X_valid_batch)*<span class="hljs-number">100</span>:<span class="hljs-number">.2</span>f}</span>%&quot;</span>)</code></pre><details class="question">
 <summary><strong>Question:</strong> Take a guess at the accuracy of our similarity-based model.</summary>
 <div class="answer">
 <strong>Answer:</strong> This model is correct about 66.85% of the time.

@@ -61,32 +61,26 @@
 <p>We&#39;ll go into more details starting with training the model.</p>
 <h2>Batch Gradient Descent</h2>
 <p>All examples thus far have used batch gradient descent (BGD). All gradient descent methods are iterative, meaning we continually make small changes to the parameters until we are satisfied or run out of time. BGD looks something like this:</p>
-<pre><code class="language-text">for each epoch
-    1. compute gradient with respect to all examples
-    2. average gradients across all examples
-    3. update parameters using averaged gradients
-</code></pre>
-<p>In batch gradient descent, we compute all gradients at once and average them across all examples, resulting in the parameters being updated a single time each epoch. This has the advantage of smoothing out the effect of any outliers and leveraging parallel computation.</p>
+<pre class="hljs"><code class="language-python"><span class="hljs-keyword">for</span> each epoch
+    <span class="hljs-number">1.</span> compute gradient <span class="hljs-keyword">with</span> respect to <span class="hljs-built_in">all</span> examples
+    <span class="hljs-number">2.</span> average gradients across <span class="hljs-built_in">all</span> examples
+    <span class="hljs-number">3.</span> update parameters using averaged gradients</code></pre><p>In batch gradient descent, we compute all gradients at once and average them across all examples, resulting in the parameters being updated a single time each epoch. This has the advantage of smoothing out the effect of any outliers and leveraging parallel computation.</p>
 <h2>Stochastic Gradient Descent</h2>
 <p>In stochastic Gradient Descent (SGD) we update parameters $N$ times per epoch—once per example.</p>
 <p>The <strong>stochastic</strong> part of SGD refers to a random shuffling of the examples each epoch.</p>
-<pre><code class="language-text">for each epoch
-    randomly shuffle all examples
-    for each example
-        1. compute gradient with respect to single example
-        2. update parameters using gradient
-</code></pre>
-<p>Although we update the parameters more frequently, not all updates are good since outliers will make the model perform worse in the general case.</p>
+<pre class="hljs"><code class="language-python"><span class="hljs-keyword">for</span> each epoch
+    randomly shuffle <span class="hljs-built_in">all</span> examples
+    <span class="hljs-keyword">for</span> each example
+        <span class="hljs-number">1.</span> compute gradient <span class="hljs-keyword">with</span> respect to single example
+        <span class="hljs-number">2.</span> update parameters using gradient</code></pre><p>Although we update the parameters more frequently, not all updates are good since outliers will make the model perform worse in the general case.</p>
 <h2>Mini-Batch Stochastic Gradient Descent</h2>
 <p>Mini-Batch SGD provides a middle ground. We chunk the input into some number of batches and take the average gradient over each batch.</p>
-<pre><code class="language-text">for each epoch
+<pre class="hljs"><code class="language-python"><span class="hljs-keyword">for</span> each epoch
     randomly distribute examples into batches
-    for each batch
-        1. compute gradient with respect to all examples in batch
-        2. average gradients across all examples in batch
-        3. update parameters using averaged gradients
-</code></pre>
-<p>This enables us to get the best of both worlds:</p>
+    <span class="hljs-keyword">for</span> each batch
+        <span class="hljs-number">1.</span> compute gradient <span class="hljs-keyword">with</span> respect to <span class="hljs-built_in">all</span> examples <span class="hljs-keyword">in</span> batch
+        <span class="hljs-number">2.</span> average gradients across <span class="hljs-built_in">all</span> examples <span class="hljs-keyword">in</span> batch
+        <span class="hljs-number">3.</span> update parameters using averaged gradients</code></pre><p>This enables us to get the best of both worlds:</p>
 <ul>
 <li>less susceptible to outliers and noise,</li>
 <li>a good number of updates per epoch, and</li>
