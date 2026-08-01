@@ -5,7 +5,7 @@ public/
 pyodide-*.tar.bz2
 pyodide/
 *.whl
-dist/
+docs/
 mnist.bin
 
 .venv/

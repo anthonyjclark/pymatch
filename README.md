@@ -6,26 +6,26 @@
 
 ## Building the PyMatch Wheel
 
-To build the PyMatch `.whl` wheel package and copy it to the docs public folder for Pyodide web execution:
+To build the PyMatch `.whl` wheel package and copy it to the site public folder for Pyodide web execution:
 
 ```bash
 # Build the Python wheel distribution
 uv build
 
-# Copy the generated wheel into docs/public
-mkdir -p docs/public
-cp dist/match-0.1.0-py3-none-any.whl docs/public/
+# Copy the generated wheel into site/public
+mkdir -p site/public
+cp dist/match-0.1.0-py3-none-any.whl site/public/
 ```
 
 TODO: automate the wheel copy step (either in vite or uv).
 
-## Building the Docs
+## Building the Docs Site
 
-The documentation and interactive Pyodide playground live in the [`docs/`](docs/) directory.
+The site source code and interactive Pyodide playground live in the [`site/`](site/) directory, which builds the static website into the root [`docs/`](docs/) directory for GitHub Pages deployment.
 
 ```bash
-# Navigate to docs directory
-cd docs
+# Navigate to site directory
+cd site
 
 # Install Node dependencies
 npm install
@@ -39,7 +39,7 @@ npm test
 # Autoformat TypeScript files using oxfmt
 npm run format
 
-# Build the production bundle
+# Build the production static site into root docs/ folder
 npm run build
 ```
 
@@ -76,4 +76,5 @@ print(time() - start)
 - [ ] Add copy-to-clipboard buttons for code and output blocks
 - [ ] Find uses of `os` that should be replaced with `pathlib`
 - [ ] Add a script to download the pyodide release
-- [ ] Move docs source files and use docs as the build output folder
+- [x] Move docs source files and use docs as the build output folder
+

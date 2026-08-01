@@ -56,6 +56,8 @@ export default defineConfig({
   // TODO: copy match wheel: viteStaticCopy({ targets: [ { src: resolve(import.meta.dirname, `../dist/${matchWheelName}`).replace(/\\/g, "/"), dest: ".", } ] })
   // plugins: [viteStaticCopyPyodide()],
   build: {
+    outDir: resolve(import.meta.dirname, "../docs"),
+    emptyOutDir: true,
     rollupOptions: {
       input: getHtmlFiles(),
       onwarn(warning, warn) {
